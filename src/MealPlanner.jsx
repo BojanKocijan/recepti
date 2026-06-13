@@ -32,6 +32,23 @@ const getHFPricePerPortion = (people, meals) => {
 };
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+// Category config — used for badges, filter tabs, and randomize logic
+const CATEGORY_CONFIG = {
+  breakfast: { emoji: "🌅", labelEn: "Breakfast", labelSr: "Doručak",  color: "#f97316" },
+  lunch:     { emoji: "☀️",  labelEn: "Lunch",     labelSr: "Ručak",    color: "#eab308" },
+  dinner:    { emoji: "🌙", labelEn: "Dinner",    labelSr: "Večera",   color: "#6366f1" },
+  dessert:   { emoji: "🍰", labelEn: "Dessert",   labelSr: "Desert",   color: "#ec4899" },
+  soup:      { emoji: "🍲", labelEn: "Soup",      labelSr: "Supa",     color: "#64748b" },
+  side:      { emoji: "🥗", labelEn: "Side",      labelSr: "Prilog",   color: "#22c55e" },
+  snack:     { emoji: "🍎", labelEn: "Snack",     labelSr: "Užina",    color: "#8b5cf6" },
+};
+const MAIN_CATS = ["breakfast", "lunch", "dinner", "dessert"]; // tabs shown individually
+const catLabel = (cat, lang) => {
+  const cfg = CATEGORY_CONFIG[cat];
+  if (!cfg) return cat;
+  return lang === "sr" ? cfg.labelSr : cfg.labelEn;
+};
 const DAYS_FULL_EN = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
 const DAYS_FULL_SR = { Mon: "Ponedeljak", Tue: "Utorak", Wed: "Sreda", Thu: "Četvrtak", Fri: "Petak", Sat: "Subota", Sun: "Nedelja" };
 const DAYS_SHORT_SR = { Mon: "Pon", Tue: "Uto", Wed: "Sre", Thu: "Čet", Fri: "Pet", Sat: "Sub", Sun: "Ned" };
@@ -95,6 +112,7 @@ const T = {
     cancel: "Cancel", saveBtn: "Save",
     editRecipe: "Edit Recipe", reviewScanned: "Review Scanned Recipe", newRecipe: "New Recipe",
     serves: "Serves", time: "Time",
+    category: "Course", categoryOther: "Other",
     tags: "Tags",
     nutritionPerPortion: "Nutrition per portion", optional: "(optional)",
     ingredientsCount: "Ingredients",
@@ -179,6 +197,7 @@ const T = {
     cancel: "Odustani", saveBtn: "Sačuvaj",
     editRecipe: "Izmeni recept", reviewScanned: "Pregled skeniranog recepta", newRecipe: "Novi recept",
     serves: "Za", time: "Vreme",
+    category: "Vrsta", categoryOther: "Ostalo",
     tags: "Oznake",
     nutritionPerPortion: "Nutricija po porciji", optional: "(opciono)",
     ingredientsCount: "Sastojci",
@@ -400,135 +419,135 @@ const ing = (name, quantity) => {
 // ============ LEAN HIGH-PROTEIN LIBRARY (fat-loss focused) ============
 // All recipes serve 2, hit 35-45g protein per portion, ~400-550 kcal, lean
 const HF_LIBRARY = [
-  { id: "hf-1", name: "Grilled chicken & sweet potato", emoji: "🍗", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
+  { id: "hf-1", name: "Grilled chicken & sweet potato", emoji: "🍗", category: "dinner", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
     nutrition: { kcal: 480, protein: 48, carbs: 45, fat: 9 },
     ingredients: [ing("Chicken breast", 0.3), ing("Sweet potato", 0.4), ing("Broccoli", 1), ing("Garlic", 0.3), ing("Olive oil", 0.02), ing("Spices", 2), ing("Salt & pepper", 1)],
     steps: ["Preheat oven to 220°C. Cube sweet potato and toss with a teaspoon of oil, paprika, salt and pepper.", "Roast sweet potato for 20 minutes.", "Season chicken with garlic powder, paprika, salt and pepper. Grill or pan-sear in a non-stick pan 5-6 minutes per side until 75°C internal.", "Steam broccoli florets for 4 minutes until bright green and just tender.", "Slice chicken and serve with sweet potato and broccoli."] },
 
-  { id: "hf-2", name: "Tuna & white bean salad", emoji: "🥗", tags: ["fish", "high-protein", "lean", "quick", "no-cook"], minutes: 10, people: 2,
+  { id: "hf-2", name: "Tuna & white bean salad", emoji: "🥗", category: "lunch", tags: ["fish", "high-protein", "lean", "quick", "no-cook"], minutes: 10, people: 2,
     nutrition: { kcal: 420, protein: 42, carbs: 35, fat: 9 },
     ingredients: [ing("Tuna in water (can)", 2), ing("Chickpeas", 1), ing("Cherry tomatoes", 1), ing("Cucumber", 1), ing("Red onion", 0.05), ing("Lemon", 1), ing("Olive oil", 0.02), ing("Fresh parsley", 1)],
     steps: ["Drain tuna and chickpeas. Halve cherry tomatoes and dice cucumber.", "Finely slice red onion and rinse briefly under cold water to mellow it.", "In a bowl, combine tuna, chickpeas, vegetables, and chopped parsley.", "Dress with lemon juice, a teaspoon of olive oil, salt and pepper. Toss gently.", "Eat immediately or chill for 10 minutes."] },
 
-  { id: "hf-3", name: "Egg white veggie scramble", emoji: "🍳", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
+  { id: "hf-3", name: "Egg white veggie scramble", emoji: "🍳", category: "breakfast", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
     nutrition: { kcal: 350, protein: 40, carbs: 30, fat: 7 },
     ingredients: [ing("Egg whites (carton)", 0.5), ing("Eggs", 0.2), ing("Spinach", 0.5), ing("Cherry tomatoes", 1), ing("Mushrooms", 1), ing("Whole wheat bread", 0.3), ing("Garlic", 0.2), ing("Salt & pepper", 1)],
     steps: ["Slice mushrooms and halve cherry tomatoes. Mince garlic.", "Sauté mushrooms in a non-stick pan until golden. Add tomatoes and garlic, cook 1 minute.", "Wilt in spinach.", "Pour in egg whites and 2 whole eggs (whisked). Scramble gently until just set.", "Toast bread and serve alongside."] },
 
-  { id: "hf-4", name: "Skyr chicken curry", emoji: "🍛", tags: ["meat", "high-protein", "lean"], minutes: 25, people: 2,
+  { id: "hf-4", name: "Skyr chicken curry", emoji: "🍛", category: "dinner", tags: ["meat", "high-protein", "lean"], minutes: 25, people: 2,
     nutrition: { kcal: 510, protein: 52, carbs: 50, fat: 9 },
     ingredients: [ing("Chicken breast", 0.3), ing("Skyr (0% fat)", 0.3), ing("Brown rice", 0.16), ing("Onion", 0.2), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Tomato paste", 1), ing("Spinach", 0.5), ing("Spices", 4)],
     steps: ["Cook brown rice according to package.", "Cube chicken. Season with curry spices and salt.", "Sauté diced onion until soft. Add minced garlic and ginger, cook 1 minute.", "Add chicken and brown lightly. Stir in tomato paste and 100ml water, simmer 8 minutes.", "Wilt in spinach. Off heat, stir in skyr (don't boil — it'll split). Serve over rice."] },
 
-  { id: "hf-5", name: "Tofu stir-fry with edamame", emoji: "🥢", tags: ["vegan", "vegetarian", "high-protein", "lean", "asian"], minutes: 25, people: 2,
+  { id: "hf-5", name: "Tofu stir-fry with edamame", emoji: "🥢", category: "dinner", tags: ["vegan", "vegetarian", "high-protein", "lean", "asian"], minutes: 25, people: 2,
     nutrition: { kcal: 470, protein: 40, carbs: 50, fat: 12 },
     ingredients: [ing("Tofu", 1), ing("Edamame (frozen)", 0.5), ing("Brown rice", 0.16), ing("Bell pepper", 1), ing("Carrots", 0.2), ing("Soy sauce", 0.3), ing("Garlic", 0.3), ing("Ginger", 0.3), ing("Spices", 2)],
     steps: ["Cook brown rice. Press tofu and cube it.", "Pan-fry tofu in a non-stick pan with a tiny splash of oil until crispy on all sides, ~8 minutes.", "Add julienned bell pepper and grated carrot. Stir-fry 3 minutes.", "Add frozen edamame, minced garlic and ginger. Cook 2 more minutes.", "Toss with soy sauce and chili flakes. Serve over rice."] },
 
-  { id: "hf-6", name: "Skyr chicken bowl", emoji: "🥣", tags: ["meat", "high-protein", "lean", "quick"], minutes: 15, people: 2,
+  { id: "hf-6", name: "Skyr chicken bowl", emoji: "🥣", category: "dinner", tags: ["meat", "high-protein", "lean", "quick"], minutes: 15, people: 2,
     nutrition: { kcal: 440, protein: 55, carbs: 25, fat: 11 },
     ingredients: [ing("Chicken breast", 0.3), ing("Skyr (0% fat)", 0.5), ing("Cucumber", 1), ing("Cherry tomatoes", 1), ing("Avocado", 0.5), ing("Lemon", 0.5), ing("Spices", 2), ing("Salt & pepper", 1)],
     steps: ["Season chicken with paprika, garlic powder, salt and pepper. Pan-sear 5 min per side. Slice once cool.", "Dice cucumber and halve cherry tomatoes. Slice half an avocado.", "Build bowls: skyr as the base, chicken on top, vegetables around.", "Squeeze over lemon juice and crack pepper. Done."] },
 
-  { id: "hf-7", name: "Cod with quinoa & asparagus", emoji: "🐠", tags: ["fish", "high-protein", "lean"], minutes: 25, people: 2,
+  { id: "hf-7", name: "Cod with quinoa & asparagus", emoji: "🐠", category: "dinner", tags: ["fish", "high-protein", "lean"], minutes: 25, people: 2,
     nutrition: { kcal: 460, protein: 45, carbs: 45, fat: 8 },
     ingredients: [ing("Cod loin (frozen)", 0.7), ing("Quinoa", 0.16), ing("Green beans", 0.5), ing("Lemon", 1), ing("Garlic", 0.3), ing("Olive oil", 0.02), ing("Fresh parsley", 1)],
     steps: ["Rinse quinoa and cook in 1.5x its volume of water, 15 minutes.", "Steam green beans for 5 minutes until just tender.", "Pat cod dry. Season with salt, pepper, and minced garlic.", "Pan-fry cod 3-4 minutes per side in a non-stick pan with a teaspoon of oil.", "Plate quinoa, top with cod and beans. Squeeze lemon over and sprinkle parsley."] },
 
-  { id: "hf-8", name: "Turkey lettuce wraps", emoji: "🥬", tags: ["meat", "high-protein", "lean", "quick", "asian"], minutes: 20, people: 2,
+  { id: "hf-8", name: "Turkey lettuce wraps", emoji: "🥬", category: "lunch", tags: ["meat", "high-protein", "lean", "quick", "asian"], minutes: 20, people: 2,
     nutrition: { kcal: 380, protein: 42, carbs: 20, fat: 14 },
     ingredients: [ing("Lean turkey mince", 0.5), ing("Lettuce (head)", 1), ing("Carrots", 0.2), ing("Bell pepper", 1), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Soy sauce", 0.3), ing("Lime", 1)],
     steps: ["Separate lettuce leaves into cups and rinse. Pat dry.", "Brown turkey mince in a hot non-stick pan, breaking up well.", "Add minced garlic, ginger, grated carrot and diced bell pepper. Cook 4 minutes.", "Stir in soy sauce, lime juice, and a pinch of chili.", "Spoon into lettuce cups and eat with hands."] },
 
-  { id: "hf-9", name: "Lentil & chicken soup", emoji: "🍲", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
+  { id: "hf-9", name: "Lentil & chicken soup", emoji: "🍲", category: "soup", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
     nutrition: { kcal: 480, protein: 50, carbs: 45, fat: 8 },
     ingredients: [ing("Chicken breast", 0.25), ing("Red lentils", 0.15), ing("Carrots", 0.2), ing("Onion", 0.2), ing("Garlic", 0.5), ing("Tomato paste", 1), ing("Stock cube", 2), ing("Spinach", 0.5), ing("Spices", 3)],
     steps: ["Dice onion and carrots. Mince garlic. Cube chicken.", "Sauté onion and carrots in a soup pot, 5 minutes.", "Add chicken and brown lightly. Stir in garlic, cumin, paprika, and tomato paste.", "Add lentils, crumbled stock cubes, and 800ml water. Simmer 20 minutes.", "Stir in spinach until wilted. Season and serve."] },
 
-  { id: "hf-10", name: "Greek yogurt chicken kebabs", emoji: "🍢", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
+  { id: "hf-10", name: "Greek yogurt chicken kebabs", emoji: "🍢", category: "dinner", tags: ["meat", "high-protein", "lean"], minutes: 30, people: 2,
     nutrition: { kcal: 450, protein: 50, carbs: 30, fat: 12 },
     ingredients: [ing("Chicken breast", 0.3), ing("Greek yogurt", 0.2), ing("Bell pepper", 1), ing("Red onion", 0.15), ing("Bulgur", 0.12), ing("Lemon", 1), ing("Garlic", 0.5), ing("Spices", 3)],
     steps: ["Cube chicken. Mix half the yogurt with garlic, lemon juice, paprika, cumin, salt — marinate chicken 15 minutes (or longer if you have time).", "Cook bulgur in 1.5x its volume of boiling water, 12 minutes.", "Thread chicken onto skewers with chunks of bell pepper and onion.", "Grill or pan-fry kebabs 4 minutes per side until charred and cooked through.", "Serve over bulgur with a dollop of plain yogurt and lemon."] },
 
-  { id: "hf-11", name: "Skyr overnight oats", emoji: "🥣", tags: ["vegetarian", "high-protein", "lean", "quick", "no-cook"], minutes: 5, people: 2,
+  { id: "hf-11", name: "Skyr overnight oats", emoji: "🥣", category: "breakfast", tags: ["vegetarian", "high-protein", "lean", "quick", "no-cook"], minutes: 5, people: 2,
     nutrition: { kcal: 420, protein: 38, carbs: 55, fat: 6 },
     ingredients: [ing("Oats", 0.16), ing("Skyr (0% fat)", 0.5), ing("Skim milk", 0.3), ing("Eggs", 0.05)],
     steps: ["In two jars or bowls, combine 80g oats, 250g skyr, and 150ml skim milk each.", "Stir well, sweeten with honey or stevia if desired.", "Top with berries (frozen work great).", "Cover and refrigerate overnight (at least 4 hours).", "Eat cold straight from the jar — perfect breakfast or post-workout meal."] },
 
-  { id: "hf-12", name: "Chicken & quinoa bowl", emoji: "🍱", tags: ["meat", "high-protein", "lean"], minutes: 25, people: 2,
+  { id: "hf-12", name: "Chicken & quinoa bowl", emoji: "🍱", category: "dinner", tags: ["meat", "high-protein", "lean"], minutes: 25, people: 2,
     nutrition: { kcal: 500, protein: 48, carbs: 50, fat: 11 },
     ingredients: [ing("Chicken breast", 0.3), ing("Quinoa", 0.16), ing("Avocado", 0.5), ing("Cherry tomatoes", 1), ing("Cucumber", 0.5), ing("Lime", 1), ing("Spices", 2), ing("Fresh cilantro", 0.5)],
     steps: ["Cook quinoa 15 minutes. Let cool slightly.", "Season chicken with cumin, paprika, salt. Pan-sear 5 min per side, slice.", "Halve cherry tomatoes, dice cucumber, slice avocado.", "Build bowls: quinoa base, chicken, vegetables, avocado.", "Squeeze lime over, top with cilantro. Optional: dollop of skyr or hot sauce."] },
 
-  { id: "hf-13", name: "Shrimp zucchini stir-fry", emoji: "🍤", tags: ["fish", "high-protein", "lean", "quick"], minutes: 20, people: 2,
+  { id: "hf-13", name: "Shrimp zucchini stir-fry", emoji: "🍤", category: "dinner", tags: ["fish", "high-protein", "lean", "quick"], minutes: 20, people: 2,
     nutrition: { kcal: 380, protein: 42, carbs: 30, fat: 9 },
     ingredients: [ing("Shrimp", 1.5), ing("Zucchini", 2), ing("Brown rice", 0.16), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Soy sauce", 0.3), ing("Lime", 1), ing("Spices", 2)],
     steps: ["Cook brown rice.", "Spiralize or thinly slice zucchini into noodle-like ribbons.", "Heat a non-stick pan. Sauté garlic and ginger 30 seconds.", "Add shrimp and cook 2 minutes until pink. Add zucchini and stir-fry 2 more minutes.", "Toss with soy sauce, lime juice, and chili flakes. Serve over rice."] },
 
-  { id: "hf-14", name: "Quark protein pancakes", emoji: "🥞", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
+  { id: "hf-14", name: "Quark protein pancakes", emoji: "🥞", category: "breakfast", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
     nutrition: { kcal: 380, protein: 38, carbs: 45, fat: 6 },
     ingredients: [ing("Quark (low-fat)", 0.4), ing("Oats", 0.1), ing("Eggs", 0.4), ing("Skim milk", 0.1), ing("Spices", 1)],
     steps: ["Blend or whisk together quark, oats, 4 eggs, skim milk, a pinch of cinnamon, and a teaspoon of baking powder.", "Heat a non-stick pan over medium heat — no oil needed.", "Pour small pancakes (~10cm). Cook 2 minutes until bubbles form, flip, cook 1 more.", "Stack and top with berries, a drizzle of honey, or extra quark.", "Makes 8 pancakes — serves 2 generously."] },
 
-  { id: "hf-15", name: "Tempeh sweet potato bowl", emoji: "🍠", tags: ["vegan", "vegetarian", "high-protein", "lean"], minutes: 30, people: 2,
+  { id: "hf-15", name: "Tempeh sweet potato bowl", emoji: "🍠", category: "dinner", tags: ["vegan", "vegetarian", "high-protein", "lean"], minutes: 30, people: 2,
     nutrition: { kcal: 510, protein: 38, carbs: 60, fat: 13 },
     ingredients: [ing("Tempeh", 1), ing("Sweet potato", 0.4), ing("Black beans", 1), ing("Spinach", 0.5), ing("Avocado", 0.5), ing("Lime", 1), ing("Soy sauce", 0.2), ing("Spices", 3)],
     steps: ["Cube sweet potato, toss with paprika and a teaspoon of oil. Roast at 220°C for 25 minutes.", "Slice tempeh and marinate in soy sauce, garlic powder, and chili flakes for 5 minutes.", "Pan-fry tempeh 3 minutes per side until crispy.", "Heat black beans with a pinch of cumin.", "Build bowls: spinach base, sweet potato, beans, tempeh, sliced avocado, lime."] },
 
-  { id: "hf-16", name: "Lean turkey chili", emoji: "🌶️", tags: ["meat", "high-protein", "lean", "spicy"], minutes: 30, people: 2,
+  { id: "hf-16", name: "Lean turkey chili", emoji: "🌶️", category: "soup", tags: ["meat", "high-protein", "lean", "spicy"], minutes: 30, people: 2,
     nutrition: { kcal: 460, protein: 45, carbs: 45, fat: 10 },
     ingredients: [ing("Lean turkey mince", 0.5), ing("Kidney beans", 1), ing("Black beans", 1), ing("Tomatoes", 0.4), ing("Onion", 0.2), ing("Garlic", 0.5), ing("Tomato paste", 1), ing("Spices", 4)],
     steps: ["Dice onion and mince garlic. Brown turkey mince in a pot.", "Add onion and garlic, cook 3 minutes.", "Stir in tomato paste, chili powder, cumin, paprika.", "Add diced tomatoes, drained beans, and 200ml water. Simmer 15 minutes.", "Taste and adjust spice. Serve as-is or over a small portion of rice."] },
 
-  { id: "hf-17", name: "Creamy skyr pasta", emoji: "🍝", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
+  { id: "hf-17", name: "Creamy skyr pasta", emoji: "🍝", category: "dinner", tags: ["vegetarian", "high-protein", "lean", "quick"], minutes: 15, people: 2,
     nutrition: { kcal: 490, protein: 42, carbs: 65, fat: 7 },
     ingredients: [ing("Whole wheat pasta", 0.16), ing("Skyr (0% fat)", 0.5), ing("Spinach", 0.5), ing("Garlic", 0.3), ing("Cherry tomatoes", 1), ing("Parmesan", 0.2), ing("Spices", 1)],
     steps: ["Cook pasta in salted water until al dente. Reserve 1 cup pasta water.", "Sauté minced garlic in a dry pan with halved cherry tomatoes, 3 minutes.", "Drain pasta, return to pot. Remove from heat. Stir in skyr with a splash of pasta water — off heat so it doesn't split.", "Add tomatoes and wilt in spinach.", "Top with parmesan and black pepper."] },
 
-  { id: "hf-18", name: "Salmon teriyaki bowl", emoji: "🍙", tags: ["fish", "high-protein", "lean", "asian"], minutes: 25, people: 2,
+  { id: "hf-18", name: "Salmon teriyaki bowl", emoji: "🍙", category: "dinner", tags: ["fish", "high-protein", "lean", "asian"], minutes: 25, people: 2,
     nutrition: { kcal: 540, protein: 45, carbs: 50, fat: 14 },
     ingredients: [ing("Salmon fillet", 0.25), ing("Brown rice", 0.16), ing("Edamame (frozen)", 0.4), ing("Carrots", 0.15), ing("Soy sauce", 0.3), ing("Ginger", 0.3), ing("Garlic", 0.3), ing("Lime", 1)],
     steps: ["Cook brown rice.", "Mix soy sauce, grated ginger, garlic, and a teaspoon of honey for the glaze.", "Pan-sear salmon skin-side down 4 minutes, flip, brush with glaze, cook 2 more minutes.", "Boil edamame 3 minutes. Grate carrots.", "Build bowls: rice, salmon, edamame, carrots. Drizzle leftover glaze and squeeze lime."] },
 
-  { id: "hf-19", name: "Chicken & broccoli stir-fry", emoji: "🥦", tags: ["meat", "high-protein", "lean", "quick", "asian"], minutes: 20, people: 2,
+  { id: "hf-19", name: "Chicken & broccoli stir-fry", emoji: "🥦", category: "dinner", tags: ["meat", "high-protein", "lean", "quick", "asian"], minutes: 20, people: 2,
     nutrition: { kcal: 430, protein: 50, carbs: 35, fat: 9 },
     ingredients: [ing("Chicken breast", 0.3), ing("Broccoli", 1.5), ing("Brown rice", 0.16), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Soy sauce", 0.3), ing("Spices", 2)],
     steps: ["Cook brown rice.", "Cube chicken. Cut broccoli into small florets.", "Heat a non-stick pan. Stir-fry chicken with minced garlic and ginger until golden, 6-7 minutes.", "Add broccoli and 2 tablespoons of water. Cover and steam 3 minutes.", "Add soy sauce and chili flakes. Toss and serve over rice."] },
 
-  { id: "hf-20", name: "Mediterranean tuna wrap", emoji: "🌯", tags: ["fish", "high-protein", "lean", "quick"], minutes: 10, people: 2,
+  { id: "hf-20", name: "Mediterranean tuna wrap", emoji: "🌯", category: "lunch", tags: ["fish", "high-protein", "lean", "quick"], minutes: 10, people: 2,
     nutrition: { kcal: 410, protein: 38, carbs: 40, fat: 10 },
     ingredients: [ing("Tuna in water (can)", 2), ing("Whole wheat wraps", 0.25), ing("Greek yogurt", 0.1), ing("Cucumber", 0.5), ing("Cherry tomatoes", 0.5), ing("Lettuce (head)", 0.3), ing("Lemon", 0.5), ing("Spices", 1)],
     steps: ["Drain tuna and mix with Greek yogurt, lemon juice, salt, pepper, and a pinch of paprika.", "Dice cucumber and halve cherry tomatoes. Shred lettuce.", "Warm wraps briefly in a dry pan or microwave.", "Spread tuna mix down the center, top with vegetables.", "Roll tightly and slice in half."] },
 
-  { id: "hf-21", name: "Lean beef & rice bowl", emoji: "🍚", tags: ["meat", "high-protein", "lean", "asian"], minutes: 25, people: 2,
+  { id: "hf-21", name: "Lean beef & rice bowl", emoji: "🍚", category: "dinner", tags: ["meat", "high-protein", "lean", "asian"], minutes: 25, people: 2,
     nutrition: { kcal: 500, protein: 48, carbs: 50, fat: 11 },
     ingredients: [ing("Lean beef mince 5%", 0.4), ing("Brown rice", 0.16), ing("Spinach", 0.7), ing("Carrots", 0.15), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Soy sauce", 0.4), ing("Eggs", 0.2)],
     steps: ["Cook brown rice.", "Brown lean beef in a non-stick pan, breaking up well.", "Add minced garlic, ginger, soy sauce, and a teaspoon of honey. Cook 2 minutes.", "Wilt spinach into the beef. Grate carrots.", "Top each bowl: rice, beef, carrots, and a soft-boiled or fried egg."] },
 
-  { id: "hf-22", name: "Greek skyr chicken bowl", emoji: "🥗", tags: ["meat", "high-protein", "lean", "quick"], minutes: 20, people: 2,
+  { id: "hf-22", name: "Greek skyr chicken bowl", emoji: "🥗", category: "lunch", tags: ["meat", "high-protein", "lean", "quick"], minutes: 20, people: 2,
     nutrition: { kcal: 470, protein: 52, carbs: 30, fat: 13 },
     ingredients: [ing("Chicken breast", 0.3), ing("Skyr (0% fat)", 0.3), ing("Cucumber", 1), ing("Cherry tomatoes", 1), ing("Red onion", 0.05), ing("Feta", 0.4), ing("Lemon", 1), ing("Spices", 2)],
     steps: ["Season chicken with oregano, garlic powder, salt and pepper. Pan-sear 5-6 min per side. Slice.", "Mix skyr with grated cucumber (squeeze water out first), minced garlic, and lemon for tzatziki.", "Halve cherry tomatoes, dice cucumber, thinly slice red onion.", "Build bowls: vegetables, chicken, crumbled feta on top.", "Dollop tzatziki, finish with lemon and oregano."] },
 
-  { id: "hf-23", name: "White fish curry", emoji: "🐟", tags: ["fish", "high-protein", "lean"], minutes: 25, people: 2,
+  { id: "hf-23", name: "White fish curry", emoji: "🐟", category: "dinner", tags: ["fish", "high-protein", "lean"], minutes: 25, people: 2,
     nutrition: { kcal: 450, protein: 42, carbs: 45, fat: 11 },
     ingredients: [ing("Cod loin (frozen)", 0.5), ing("Brown rice", 0.16), ing("Spinach", 0.5), ing("Tomato paste", 1), ing("Onion", 0.2), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Spices", 4)],
     steps: ["Cook brown rice.", "Sauté diced onion until soft. Add minced garlic, ginger, and curry spices.", "Stir in tomato paste and 200ml water. Simmer 5 minutes.", "Cube cod and add to the sauce. Simmer gently 6-8 minutes until fish flakes.", "Wilt in spinach. Serve over rice."] },
 
-  { id: "hf-24", name: "Egg white & turkey scramble", emoji: "🍳", tags: ["meat", "high-protein", "lean", "quick"], minutes: 15, people: 2,
+  { id: "hf-24", name: "Egg white & turkey scramble", emoji: "🍳", category: "breakfast", tags: ["meat", "high-protein", "lean", "quick"], minutes: 15, people: 2,
     nutrition: { kcal: 360, protein: 50, carbs: 15, fat: 11 },
     ingredients: [ing("Lean turkey mince", 0.3), ing("Egg whites (carton)", 0.4), ing("Eggs", 0.2), ing("Spinach", 0.7), ing("Mushrooms", 1), ing("Bell pepper", 1), ing("Garlic", 0.3)],
     steps: ["Brown turkey mince in a non-stick pan, breaking up. Set aside.", "In the same pan, sauté diced bell pepper and mushrooms 4 minutes.", "Add minced garlic and spinach, cook until wilted.", "Return turkey to pan. Pour in egg whites + 2 whisked eggs.", "Scramble gently until just set. Season generously."] },
 
-  { id: "hf-25", name: "Chickpea & spinach stew", emoji: "🥘", tags: ["vegan", "vegetarian", "high-protein", "lean"], minutes: 25, people: 2,
+  { id: "hf-25", name: "Chickpea & spinach stew", emoji: "🥘", category: "soup", tags: ["vegan", "vegetarian", "high-protein", "lean"], minutes: 25, people: 2,
     nutrition: { kcal: 440, protein: 38, carbs: 60, fat: 10 },
     ingredients: [ing("Chickpeas", 3), ing("Tofu", 0.5), ing("Spinach", 1), ing("Tomato paste", 1), ing("Onion", 0.2), ing("Garlic", 0.5), ing("Ginger", 0.3), ing("Stock cube", 1), ing("Spices", 4)],
     steps: ["Cube tofu and pan-fry until crispy on all sides.", "In the same pan, sauté diced onion until soft. Add garlic, ginger, cumin, paprika.", "Stir in tomato paste and crumbled stock cube with 300ml water.", "Add drained chickpeas. Simmer 10 minutes to thicken.", "Stir in tofu and spinach. Cook until spinach wilts. Season and serve."] },
-  { id: "hf-26", name: "Gnocchi with béchamel and roasted vegetables", emoji: "🥔", tags: ["vegetarian", "quick", "high-protein", "lean"], minutes: 20, people: 2,
+  { id: "hf-26", name: "Gnocchi with béchamel and roasted vegetables", emoji: "🥔", category: "dinner", tags: ["vegetarian", "quick", "high-protein", "lean"], minutes: 20, people: 2,
     nutrition: { kcal: 420, protein: 35, carbs: 50, fat: 12 },
     ingredients: [ing("Gnocchi", 1), ing("Whole milk", 0.7), ing("Wheat flour", 0.05), ing("Butter", 0.13), ing("Carrots", 0.5), ing("Zucchini", 1), ing("Parmesan", 0.1), ing("Garlic", 0.2), ing("Salt & pepper", 1), ing("Spices", 1)],
     steps: ["Boil gnocchi in salted water until they float, then 1-2 minutes more. Drain and set aside.", "Meanwhile, dice carrot and zucchini into small cubes. Sauté in a dry pan over medium-high heat until caramelized and tender, 8-10 minutes. Season with salt, pepper, minced garlic.", "Make béchamel: melt butter in a small pan, whisk in flour to form a paste (roux), cook 1-2 minutes. Gradually add milk while stirring constantly to avoid lumps. Simmer 5-6 minutes until thickened and smooth.", "Combine gnocchi, vegetables, and béchamel in a bowl. Gently toss to coat. Top with grated Parmesan and cracked pepper. Serve immediately."] },
-  { id: "hf-27", name: "Banana bread", emoji: "🍌", tags: ["vegetarian", "baking"], minutes: 55, people: 3,
+  { id: "hf-27", name: "Banana bread", emoji: "🍌", category: "dessert", tags: ["vegetarian", "baking"], minutes: 55, people: 3,
     nutrition: { kcal: 420, protein: 4, carbs: 40, fat: 22 },
     ingredients: [ing("Bananas", 2), ing("Eggs", 0.2), ing("Wheat flour", 0.18), ing("Sugar", 0.08), ing("Butter", 0.24), ing("Spices", 2), ing("Salt & pepper", 1)],
     steps: ["Preheat oven to 175°C. Mash 2 ripe bananas in a bowl until creamy. Stir in 2 eggs, 60g melted butter, 80g sugar, and a teaspoon of vanilla.", "In another bowl, combine 180g flour, 1 tsp baking powder, ½ tsp baking soda, a pinch of salt, and cinnamon. Mix gently into wet ingredients until flour is just combined — don't overmix.", "Pour into a lined loaf tin. Bake 45-50 minutes until a skewer comes out clean from the center.", "Cool 10 minutes in the tin, then turn out. Slice into 8 pieces. Best served warm with a cup of tea or coffee."] },
@@ -1873,23 +1892,39 @@ function DayPickerSheet({ day, slot, recipes, onPick, onClose, recipeStoreCost, 
 }
 
 // ============ RECIPES VIEW ============
+function CategoryBadge({ category, lang }) {
+  const cfg = CATEGORY_CONFIG[category ?? "dinner"];
+  if (!cfg) return null;
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+      style={{ background: cfg.color + "22", color: cfg.color }}>
+      {cfg.emoji} {lang === "sr" ? cfg.labelSr : cfg.labelEn}
+    </span>
+  );
+}
+
 function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary, onView, onDelete, onImport, adjustedPrice, people, t, lang, tRecipe }) {
   const [search, setSearch] = useState("");
-  const [filterTag, setFilterTag] = useState("all");
+  const [filterCat, setFilterCat] = useState("all");
 
   const q = search.toLowerCase();
   const matchesSearch = (name) => !q || name.toLowerCase().includes(q);
-  const matchesTag = (tags) => filterTag === "all" || (tags || []).includes(filterTag);
+  const matchesCat = (cat) => {
+    if (filterCat === "all") return true;
+    const c = cat ?? "dinner";
+    if (filterCat === "other") return !MAIN_CATS.includes(c);
+    return c === filterCat;
+  };
 
   // My saved recipes
-  const myFiltered = recipes.filter(r => matchesSearch(tRecipe(r).name) && matchesTag(r.tags));
+  const myFiltered = recipes.filter(r => matchesSearch(tRecipe(r).name) && matchesCat(r.category));
 
   // Library recipes not yet imported
   const importedSourceIds = new Set(recipes.filter(r => r.sourceId).map(r => r.sourceId));
   const libFiltered = HF_LIBRARY.filter(r => {
     const srName = RECIPE_SR[r.id]?.name || r.name;
     if (!matchesSearch(r.name) && !matchesSearch(srName)) return false;
-    return matchesTag(r.tags);
+    return matchesCat(r.category);
   });
 
   const libCost = (r) => {
@@ -1916,10 +1951,17 @@ function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary, onVie
         {search && <button onClick={() => setSearch("")} className="ios-btn"><X size={16} style={{ color: C.textTertiary }} /></button>}
       </div>
 
-      {/* Tag filter */}
+      {/* Category filter tabs */}
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4">
-        {["all", "high-protein", "lean", "meat", "fish", "vegetarian", "vegan", "quick", "no-cook"].map((tag) => (
-          <Chip key={tag} label={tag} active={filterTag === tag} onClick={() => setFilterTag(tag)} />
+        {[
+          { key: "all",       label: lang === "sr" ? "Sve" : "All" },
+          { key: "breakfast", label: `🌅 ${catLabel("breakfast", lang)}` },
+          { key: "lunch",     label: `☀️ ${catLabel("lunch", lang)}` },
+          { key: "dinner",    label: `🌙 ${catLabel("dinner", lang)}` },
+          { key: "dessert",   label: `🍰 ${catLabel("dessert", lang)}` },
+          { key: "other",     label: t.categoryOther },
+        ].map(({ key, label }) => (
+          <Chip key={key} label={label} active={filterCat === key} onClick={() => setFilterCat(key)} />
         ))}
       </div>
 
@@ -1938,6 +1980,7 @@ function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary, onVie
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold truncate">{localized.name}</div>
                     <div className="text-xs mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: C.textSecondary }}>
+                      <CategoryBadge category={r.category} lang={lang} />
                       {r.minutes && <span className="flex items-center gap-1"><Clock size={11} />{r.minutes}m</span>}
                       {r.nutrition && (<>
                         <span>·</span>
@@ -1975,6 +2018,7 @@ function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary, onVie
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[15px] truncate">{displayName}</div>
                       <div className="text-xs flex items-center gap-1.5 flex-wrap mt-0.5" style={{ color: C.textSecondary }}>
+                        <CategoryBadge category={r.category} lang={lang} />
                         <span>{r.minutes}m</span>
                         <span>·</span>
                         <span className="font-bold" style={{ color: C.green }}>{r.nutrition?.protein}g</span>
@@ -3144,6 +3188,7 @@ function ScanModal({ onClose, onScanned, people, t }) {
 function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t, lang }) {
   const [name, setName] = useState(recipe?.name || "");
   const [emoji, setEmoji] = useState(recipe?.emoji || "🍽️");
+  const [category, setCategory] = useState(recipe?.category || "dinner");
   const [ingredients, setIngredients] = useState(recipe?.ingredients || []);
   const [recipePeople, setRecipePeople] = useState(recipe?.people || people);
   const [minutes, setMinutes] = useState(recipe?.minutes || 30);
@@ -3183,7 +3228,7 @@ function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t, lang }
     const nutritionClean = nutrition.kcal || nutrition.protein
       ? { kcal: Number(nutrition.kcal) || 0, protein: Number(nutrition.protein) || 0, carbs: Number(nutrition.carbs) || 0, fat: Number(nutrition.fat) || 0 }
       : null;
-    onSave({ id: recipe?.id, name, emoji, ingredients: clean, people: recipePeople, minutes, tags: tags.length > 0 ? tags : ["meat"], steps: steps.length > 0 ? steps : (recipe?.steps || null), nutrition: nutritionClean });
+    onSave({ id: recipe?.id, name, emoji, category, ingredients: clean, people: recipePeople, minutes, tags: tags.length > 0 ? tags : ["meat"], steps: steps.length > 0 ? steps : (recipe?.steps || null), nutrition: nutritionClean });
   };
 
   const ALL_TAGS = ["meat", "fish", "vegetarian", "vegan", "high-protein", "lean", "quick", "no-cook", "asian", "spicy"];
@@ -3230,6 +3275,17 @@ function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t, lang }
               <input type="number" min="5" max="240" value={minutes} onChange={(e) => setMinutes(Number(e.target.value) || 30)}
                 className="bg-transparent outline-none font-medium w-12 text-right" style={{ color: C.blue }} />
               <span style={{ color: C.textSecondary }} className="ml-1">{t.min}</span>
+            </SettingsRow>
+          </div>
+
+          {/* Category */}
+          <div className="ios-card overflow-hidden">
+            <SettingsRow label={t.category} last>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-transparent outline-none font-medium text-[15px]" style={{ color: C.blue }}>
+                {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
+                  <option key={k} value={k}>{v.emoji} {lang === "sr" ? v.labelSr : v.labelEn}</option>
+                ))}
+              </select>
             </SettingsRow>
           </div>
 
