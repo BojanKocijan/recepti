@@ -14,6 +14,7 @@ const fromRow = (row) => ({
   ingredients: row.ingredients ?? [],
   steps: row.steps ?? [],
   sourceId: row.source_id ?? undefined,
+  category: row.category ?? 'dinner',
 });
 
 /** Map an app recipe object → DB row */
@@ -28,6 +29,7 @@ const toRow = (recipe) => ({
   ingredients: recipe.ingredients ?? [],
   steps: recipe.steps ?? [],
   source_id: recipe.sourceId ?? null,
+  category: recipe.category ?? 'dinner',
 });
 
 // ── public API ────────────────────────────────────────────────────────────────
