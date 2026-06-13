@@ -5,6 +5,7 @@ import {
   deleteRecipe as dbDeleteRecipe,
   migrateFromLocalStorage,
 } from "./services/recipeService";
+import { fetchStoreMultiplier } from "./services/storePrices";
 import { Plus, X, ChefHat, ShoppingCart, Trash2, Calendar, Camera, Upload, Sparkles, Loader2, Shuffle, Settings, BookOpen, Check, ChevronRight, ChevronLeft, Search, Clock, Users, Flame, ArrowLeft, Edit3, Timer, ListChecks, TrendingDown, TrendingUp, Printer, Download } from "lucide-react";
 
 // ============ STORES ============
@@ -830,6 +831,8 @@ export default function MealPlannerApp() {
   const [store, setStore] = useState("ah");
   const [people, setPeople] = useState(2);
   const [lang, setLang] = useState("en");
+  const [liveMultiplier, setLiveMultiplier] = useState(1.0); // updated on store change
+  const [fetchingStore, setFetchingStore] = useState(false);
   const [recipes, setRecipes] = useState([]);
   const [weekPlan, setWeekPlan] = useState({});
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
@@ -866,7 +869,7 @@ export default function MealPlannerApp() {
         }
         if (s) {
           const v = JSON.parse(s.value);
-          if (v.store) setStore(v.store);
+          if (v.store) { setStore(v.store); setLiveMultiplier(STORE_MULTIPLIERS[v.store]?.multiplier ?? 1.0); }
           if (v.people) setPeople(v.people);
           if (v.lang) setLang(v.lang);
         }
@@ -906,7 +909,20 @@ export default function MealPlannerApp() {
     };
   };
 
-  const adjustedPrice = (basePrice) => basePrice * STORE_MULTIPLIERS[store].multiplier;
+  const handleStoreChange = async (newStore) => {
+    setStore(newStore);
+    setLiveMultiplier(STORE_MULTIPLIERS[newStore]?.multiplier ?? 1.0);
+    if (newStore === "ah") return;
+    setFetchingStore(true);
+    try {
+      const m = await fetchStoreMultiplier(newStore, STORE_MULTIPLIERS[newStore]?.multiplier ?? 1.0);
+      setLiveMultiplier(m);
+    } finally {
+      setFetchingStore(false);
+    }
+  };
+
+  const adjustedPrice = (basePrice) => basePrice * liveMultiplier;
 
   const recipeStoreCost = (recipe) => {
     const recipePeople = recipe.people || 2;
@@ -1156,10 +1172,10 @@ export default function MealPlannerApp() {
 
         {/* Settings strip */}
         <div className="max-w-3xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-hide">
-          <Chip label={STORE_MULTIPLIERS[store].name} onClick={() => {
+          <Chip label={fetchingStore ? `${STORE_MULTIPLIERS[store].name} …` : STORE_MULTIPLIERS[store].name} onClick={() => {
             const keys = Object.keys(STORE_MULTIPLIERS);
             const ix = keys.indexOf(store);
-            setStore(keys[(ix + 1) % keys.length]);
+            handleStoreChange(keys[(ix + 1) % keys.length]);
           }} />
           <Chip label={`${people} ${people === 1 ? t.person : t.peopleW}`} onClick={() => setPeople(people === 6 ? 1 : people + 1)} />
           <Chip label={`${prefs.mealsPerWeek} ${t.mealsPerWeek}`} onClick={() => setPrefs({ ...prefs, mealsPerWeek: prefs.mealsPerWeek === 7 ? 3 : prefs.mealsPerWeek + 1 })} />
@@ -1192,7 +1208,7 @@ export default function MealPlannerApp() {
       {showRecipeModal && <RecipeModal recipe={editingRecipe} onSave={addOrUpdateRecipe} onClose={() => { setShowRecipeModal(false); setEditingRecipe(null); }} adjustedPrice={adjustedPrice} people={people} t={t} lang={lang} />}
       {showScanModal && <ScanModal onClose={() => setShowScanModal(false)} onScanned={handleScanned} people={people} t={t} />}
       {showLibraryModal && <LibraryModal onClose={() => setShowLibraryModal(false)} recipes={recipes} onImport={importFromLibrary} adjustedPrice={adjustedPrice} people={people} t={t} lang={lang} tRecipe={tRecipe} />}
-      {showPrefsModal && <PrefsModal prefs={prefs} setPrefs={setPrefs} store={store} setStore={setStore} people={people} setPeople={setPeople} lang={lang} setLang={setLang} onClose={() => setShowPrefsModal(false)} t={t} />}
+      {showPrefsModal && <PrefsModal prefs={prefs} setPrefs={setPrefs} store={store} setStore={handleStoreChange} people={people} setPeople={setPeople} lang={lang} setLang={setLang} onClose={() => setShowPrefsModal(false)} t={t} />}
       {viewingRecipe && <RecipeDetailModal recipe={tRecipe(viewingRecipe)} onClose={() => setViewingRecipe(null)} onEdit={(r) => { setViewingRecipe(null); setEditingRecipe(viewingRecipe); setShowRecipeModal(true); }} onUpdateSteps={updateRecipeSteps} adjustedPrice={adjustedPrice} people={people} store={store} t={t} lang={lang} />}
     </div>
   );
