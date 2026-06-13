@@ -28,6 +28,7 @@ Single person or couple cooking at home in the Netherlands. Bilingual: English a
 | 2026-06-13 | UI library: Tailwind CSS (no component library) | App imported as-is; no dedicated UI library chosen |
 | 2026-06-13 | Data layer: localStorage via storagePolyfill | No backend; all data persisted in browser localStorage |
 | 2026-06-13 | AI: Anthropic claude-sonnet-4-20250514 direct browser calls | Powers recipe scanning, step generation, cook mode |
+| 2026-06-13 | Recipes → Supabase Postgres (project: recepti, eu-central-1) | Cross-device sync; week plan / settings / prefs stay in localStorage for v1 |
 
 ## 6. Open questions / known issues
 - [ ] #2 — Migrate to TypeScript (.jsx → .tsx)
@@ -41,8 +42,9 @@ Single person or couple cooking at home in the Netherlands. Bilingual: English a
 |---|---|---|---|
 
 ## 8. Data layer
-- Default: localStorage (via storagePolyfill shim)
-- DB: none
+- Recipes: Supabase Postgres (`recipes` table, RLS disabled, personal use)
+- Week plan / settings / prefs: localStorage (storagePolyfill shim)
+- Supabase project: `tmhnltauiemfanvsvrni` (eu-central-1)
 
 ## 9. GitHub Issues repo
 BojanKocijan/recepti
@@ -55,6 +57,7 @@ Auto-deploys from main via `.github/workflows/deploy.yml`
 ## 11. Active feature
 | ID | Title | Status | Branch | JTBD |
 |---|---|---|---|---|
+| #7 | Supabase recipes | in-prototype | feat/supabase-recipes | As a home cook, I want my saved recipes stored in Supabase so I can access them from any device and never lose them when the browser is cleared. |
 
 ### Paused features
 | ID | Title | Status | Branch | JTBD |

@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import {
+  getRecipes,
+  upsertRecipe,
+  deleteRecipe as dbDeleteRecipe,
+  migrateFromLocalStorage,
+} from "./services/recipeService";
 import { Plus, X, ChefHat, ShoppingCart, Trash2, Calendar, Camera, Upload, Sparkles, Loader2, Shuffle, Settings, BookOpen, Check, ChevronRight, ChevronLeft, Search, Clock, Users, Flame, ArrowLeft, Edit3, Timer, ListChecks, TrendingDown, TrendingUp, Printer, Download } from "lucide-react";
 
 // ============ STORES ============
@@ -839,13 +845,13 @@ export default function MealPlannerApp() {
   useEffect(() => {
     (async () => {
       try {
+        // Load settings, week plan, prefs from localStorage
         const [r, p, s, pr] = await Promise.all([
           window.storage.get("recipes_v4").catch(() => null),
           window.storage.get("weekPlan_v4").catch(() => null),
           window.storage.get("settings_v4").catch(() => null),
           window.storage.get("prefs_v4").catch(() => null),
         ]);
-        if (r) setRecipes(JSON.parse(r.value));
         if (p) setWeekPlan(JSON.parse(p.value));
         if (s) {
           const v = JSON.parse(s.value);
@@ -854,13 +860,25 @@ export default function MealPlannerApp() {
           if (v.lang) setLang(v.lang);
         }
         if (pr) setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(pr.value) });
+
+        // Migrate any existing localStorage recipes into Supabase (runs once, skips dupes)
+        const localRecipes = r ? JSON.parse(r.value) : [];
+        await migrateFromLocalStorage(localRecipes);
+
+        // Load recipes from Supabase; fall back to localStorage if unavailable
+        const dbRecipes = await getRecipes();
+        if (dbRecipes.length > 0) {
+          setRecipes(dbRecipes);
+        } else if (localRecipes.length > 0) {
+          setRecipes(localRecipes);
+        }
       } catch (e) { console.error(e); }
       setLoading(false);
     })();
   }, []);
 
   const persist = async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch (e) { console.error(e); } };
-  useEffect(() => { if (!loading) persist("recipes_v4", recipes); }, [recipes, loading]);
+  // Recipes are now owned by Supabase — only week plan, settings, prefs stay in localStorage
   useEffect(() => { if (!loading) persist("weekPlan_v4", weekPlan); }, [weekPlan, loading]);
   useEffect(() => { if (!loading) persist("settings_v4", { store, people, lang }); }, [store, people, lang, loading]);
   useEffect(() => { if (!loading) persist("prefs_v4", prefs); }, [prefs, loading]);
@@ -906,39 +924,45 @@ export default function MealPlannerApp() {
   const savings = weekHFCost() - weekStoreCost();
   const savingsPercent = weekHFCost() > 0 ? (savings / weekHFCost()) * 100 : 0;
 
-  const addOrUpdateRecipe = (recipe) => {
+  const addOrUpdateRecipe = async (recipe) => {
+    const saved = { ...recipe, id: recipe.id || Date.now().toString() };
+    await upsertRecipe(saved);
     if (editingRecipe?.id) {
-      setRecipes(recipes.map((r) => (r.id === recipe.id ? { ...r, ...recipe } : r)));
+      setRecipes(recipes.map((r) => (r.id === saved.id ? { ...r, ...saved } : r)));
     } else {
-      setRecipes([...recipes, { ...recipe, id: recipe.id || Date.now().toString() }]);
+      setRecipes((prev) => [...prev, saved]);
     }
     setEditingRecipe(null);
     setShowRecipeModal(false);
   };
 
-  const deleteRecipe = (id) => {
+  const handleDeleteRecipe = async (id) => {
+    await dbDeleteRecipe(id);
     setRecipes(recipes.filter((r) => r.id !== id));
     const np = { ...weekPlan };
     Object.keys(np).forEach((d) => { if (np[d] === id) np[d] = null; });
     setWeekPlan(np);
   };
 
-  const updateRecipeSteps = (id, steps) => {
+  const updateRecipeSteps = async (id, steps) => {
+    const target = recipes.find(r => r.id === id);
+    if (target) await upsertRecipe({ ...target, steps });
     setRecipes(recipes.map(r => r.id === id ? { ...r, steps } : r));
     if (viewingRecipe?.id === id) setViewingRecipe({ ...viewingRecipe, steps });
   };
 
   const assignToDay = (day, recipeId) => setWeekPlan({ ...weekPlan, [day]: recipeId || null });
 
-  const importFromLibrary = (lib) => {
+  const importFromLibrary = async (lib) => {
     const existing = recipes.find((r) => r.sourceId === lib.id);
     if (existing) return existing.id;
     const nr = { ...lib, id: `lib-${lib.id}-${Date.now()}`, sourceId: lib.id };
+    await upsertRecipe(nr);
     setRecipes((p) => [...p, nr]);
     return nr.id;
   };
 
-  const randomizeWeek = () => {
+  const randomizeWeek = async () => {
     const dietFilter = (r) => {
       if (prefs.diet === "vegan") return r.tags.includes("vegan");
       if (prefs.diet === "vegetarian") return r.tags.includes("vegetarian") || r.tags.includes("vegan");
@@ -960,15 +984,23 @@ export default function MealPlannerApp() {
     const chosenDays = [...DAYS].sort(() => Math.random() - 0.5).slice(0, numMeals).sort((a,b) => DAYS.indexOf(a) - DAYS.indexOf(b));
     const np = {}; DAYS.forEach(d => np[d] = null);
     const nr = [...recipes];
+    const toUpsert = [];
     picked.forEach((rec, idx) => {
       const day = chosenDays[idx];
       if (rec._user) np[day] = rec.id;
       else {
         const ex = nr.find(r => r.sourceId === rec.id);
         if (ex) np[day] = ex.id;
-        else { const id = `lib-${rec.id}-${Date.now()}-${idx}`; nr.push({ ...rec, id, sourceId: rec.id }); np[day] = id; }
+        else {
+          const id = `lib-${rec.id}-${Date.now()}-${idx}`;
+          const newRec = { ...rec, id, sourceId: rec.id };
+          nr.push(newRec);
+          toUpsert.push(newRec);
+          np[day] = id;
+        }
       }
     });
+    await Promise.all(toUpsert.map(upsertRecipe));
     setRecipes(nr); setWeekPlan(np); setActiveView("plan");
   };
 
@@ -1088,8 +1120,8 @@ export default function MealPlannerApp() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-4">
-        {activeView === "plan" && <PlanView weekPlan={weekPlan} recipes={recipes} assignToDay={assignToDay} recipeStoreCost={recipeStoreCost} people={people} store={store} onRandomize={randomizeWeek} onView={setViewingRecipe} weekStoreCost={weekStoreCost()} weekHFCost={weekHFCost()} mealsPlanned={mealsPlanned} t={t} lang={lang} tRecipe={tRecipe} adjustedPrice={adjustedPrice} leftovers={weeklyLeftovers()} onAddBonusRecipe={(r) => { const newRecipe = { ...r, id: `bonus-${Date.now()}` }; setRecipes([...recipes, newRecipe]); setViewingRecipe(newRecipe); }} />}
-        {activeView === "recipes" && <RecipesView recipes={recipes} recipeStoreCost={recipeStoreCost} onAdd={() => { setEditingRecipe(null); setShowRecipeModal(true); }} onScan={() => setShowScanModal(true)} onLibrary={() => setShowLibraryModal(true)} onView={setViewingRecipe} onDelete={deleteRecipe} onImport={importFromLibrary} adjustedPrice={adjustedPrice} people={people} t={t} lang={lang} tRecipe={tRecipe} />}
+        {activeView === "plan" && <PlanView weekPlan={weekPlan} recipes={recipes} assignToDay={assignToDay} recipeStoreCost={recipeStoreCost} people={people} store={store} onRandomize={randomizeWeek} onView={setViewingRecipe} weekStoreCost={weekStoreCost()} weekHFCost={weekHFCost()} mealsPlanned={mealsPlanned} t={t} lang={lang} tRecipe={tRecipe} adjustedPrice={adjustedPrice} leftovers={weeklyLeftovers()} onAddBonusRecipe={async (r) => { const newRecipe = { ...r, id: `bonus-${Date.now()}` }; await upsertRecipe(newRecipe); setRecipes([...recipes, newRecipe]); setViewingRecipe(newRecipe); }} />}
+        {activeView === "recipes" && <RecipesView recipes={recipes} recipeStoreCost={recipeStoreCost} onAdd={() => { setEditingRecipe(null); setShowRecipeModal(true); }} onScan={() => setShowScanModal(true)} onLibrary={() => setShowLibraryModal(true)} onView={setViewingRecipe} onDelete={handleDeleteRecipe} onImport={importFromLibrary} adjustedPrice={adjustedPrice} people={people} t={t} lang={lang} tRecipe={tRecipe} />}
         {activeView === "compare" && <CompareView weekStoreCost={weekStoreCost()} weekHFCost={weekHFCost()} savings={savings} savingsPercent={savingsPercent} shoppingList={shoppingList()} adjustedPrice={adjustedPrice} store={store} people={people} mealsPlanned={mealsPlanned} t={t} lang={lang} weekPlan={weekPlan} recipes={recipes} tRecipe={tRecipe} recipeStoreCost={recipeStoreCost} />}
       </main>
 
