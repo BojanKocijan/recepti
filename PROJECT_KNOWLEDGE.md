@@ -52,16 +52,17 @@ BojanKocijan/recepti
 ## 10. Deployment
 GitHub Pages — https://bojankocijan.github.io/recepti/
 Auto-deploys from main via `.github/workflows/deploy.yml`
-`VITE_ANTHROPIC_API_KEY` must be set as a GitHub Actions secret.
+GitHub Actions secrets required: `VITE_ANTHROPIC_API_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 
 ## 11. Active feature
 | ID | Title | Status | Branch | JTBD |
 |---|---|---|---|---|
-| #7 | Supabase recipes | in-prototype | feat/supabase-recipes | As a home cook, I want my saved recipes stored in Supabase so I can access them from any device and never lose them when the browser is cleared. |
+| #10 | Lunch + Dinner slots | in-prototype | feat/meal-slots-lunch-dinner | As a home cook, I want to plan both lunch and dinner for each day of the week so that my shopping list covers everything I need to buy in one go. |
 
 ### Paused features
 | ID | Title | Status | Branch | JTBD |
 |---|---|---|---|---|
+| #7 | Supabase recipes | in-prototype | feat/supabase-recipes | As a home cook, I want my saved recipes stored in Supabase so I can access them from any device and never lose them when the browser is cleared. |
 
 ## 12. Feature audit log
 | ID | Title | Handed off | Notes |
