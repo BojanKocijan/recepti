@@ -45,8 +45,9 @@ const T = {
     store: "Store", people: "People", mealsPerWeek: "meals/week",
     person: "person", peopleW: "people",
     // Plan view
-    weekTotalAt: "Week Total at", mealsPlanned: "of 7 meals planned",
+    weekTotalAt: "Week Total at", mealsPlanned: "of 14 meals planned",
     randomizeWeek: "Randomize my week", tapToAdd: "Tap to add a meal",
+    lunch: "Lunch", dinner: "Dinner",
     nutritionWeek: "Total nutrition this week", portions: "portions", perPortion: "per portion",
     // Recipes view
     library: "Library", scan: "Scan", new: "New",
@@ -135,8 +136,9 @@ const T = {
     thisWeek: "Ova Nedelja", recipesShort: "Recepti", week: "Nedelja", compareShort: "Uporedi",
     store: "Prodavnica", people: "Osobe", mealsPerWeek: "obroka/ned",
     person: "osoba", peopleW: "osoba",
-    weekTotalAt: "Ukupno za nedelju u", mealsPlanned: "od 7 obroka planirano",
+    weekTotalAt: "Ukupno za nedelju u", mealsPlanned: "od 14 obroka planirano",
     randomizeWeek: "Nasumično popuni nedelju", tapToAdd: "Dodirni da dodaš obrok",
+    lunch: "Ručak", dinner: "Večera",
     nutritionWeek: "Ukupna nutricija za nedelju", portions: "porcija", perPortion: "po porciji",
     library: "Biblioteka", scan: "Skeniraj", new: "Novo",
     noRecipesYet: "Još nema recepata", browseLibraryHint: "Pretraži biblioteku, skeniraj recept, ili napravi novi",
@@ -846,13 +848,22 @@ export default function MealPlannerApp() {
     (async () => {
       try {
         // Load settings, week plan, prefs from localStorage
-        const [r, p, s, pr] = await Promise.all([
+        const [r, p5, p4, s, pr] = await Promise.all([
           window.storage.get("recipes_v4").catch(() => null),
+          window.storage.get("weekPlan_v5").catch(() => null),
           window.storage.get("weekPlan_v4").catch(() => null),
           window.storage.get("settings_v4").catch(() => null),
           window.storage.get("prefs_v4").catch(() => null),
         ]);
-        if (p) setWeekPlan(JSON.parse(p.value));
+        if (p5) {
+          setWeekPlan(JSON.parse(p5.value));
+        } else if (p4) {
+          // Migrate: old flat { Mon: "id" } → new { Mon: { lunch: null, dinner: "id" } }
+          const old = JSON.parse(p4.value);
+          const migrated = {};
+          DAYS.forEach(d => { migrated[d] = { lunch: null, dinner: old[d] ?? null }; });
+          setWeekPlan(migrated);
+        }
         if (s) {
           const v = JSON.parse(s.value);
           if (v.store) setStore(v.store);
@@ -879,7 +890,7 @@ export default function MealPlannerApp() {
 
   const persist = async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch (e) { console.error(e); } };
   // Recipes are now owned by Supabase — only week plan, settings, prefs stay in localStorage
-  useEffect(() => { if (!loading) persist("weekPlan_v4", weekPlan); }, [weekPlan, loading]);
+  useEffect(() => { if (!loading) persist("weekPlan_v5", weekPlan); }, [weekPlan, loading]);
   useEffect(() => { if (!loading) persist("settings_v4", { store, people, lang }); }, [store, people, lang, loading]);
   useEffect(() => { if (!loading) persist("prefs_v4", prefs); }, [prefs, loading]);
 
@@ -907,18 +918,28 @@ export default function MealPlannerApp() {
     }, 0);
   };
 
-  const mealsPlanned = Object.values(weekPlan).filter(Boolean).length;
+  // Count all planned meal slots (lunch + dinner combined)
+  const mealsPlanned = Object.values(weekPlan).reduce((sum, slots) => {
+    if (!slots || typeof slots !== 'object') return sum;
+    return sum + (slots.lunch ? 1 : 0) + (slots.dinner ? 1 : 0);
+  }, 0);
+  // Dinner-only count for HelloFresh comparison (HF only covers dinners)
+  const dinnerCount = Object.values(weekPlan).filter(
+    slots => slots && typeof slots === 'object' && Boolean(slots.dinner)
+  ).length;
 
   const weekStoreCost = () =>
-    Object.values(weekPlan).reduce((sum, recipeId) => {
-      if (!recipeId) return sum;
-      const r = recipes.find((x) => x.id === recipeId);
-      return sum + (r ? recipeStoreCost(r) : 0);
+    Object.values(weekPlan).reduce((sum, slots) => {
+      if (!slots || typeof slots !== 'object') return sum;
+      return sum + [slots.lunch, slots.dinner].filter(Boolean).reduce((s, rid) => {
+        const r = recipes.find((x) => x.id === rid);
+        return s + (r ? recipeStoreCost(r) : 0);
+      }, 0);
     }, 0);
 
   const weekHFCost = () => {
-    if (mealsPlanned === 0) return 0;
-    return mealsPlanned * getHFPricePerPortion(people, mealsPlanned) * people + HF_SHIPPING;
+    if (dinnerCount === 0) return 0;
+    return dinnerCount * getHFPricePerPortion(people, dinnerCount) * people + HF_SHIPPING;
   };
 
   const savings = weekHFCost() - weekStoreCost();
@@ -940,7 +961,11 @@ export default function MealPlannerApp() {
     await dbDeleteRecipe(id);
     setRecipes(recipes.filter((r) => r.id !== id));
     const np = { ...weekPlan };
-    Object.keys(np).forEach((d) => { if (np[d] === id) np[d] = null; });
+    Object.keys(np).forEach((d) => {
+      const slots = np[d];
+      if (!slots || typeof slots !== 'object') return;
+      np[d] = { lunch: slots.lunch === id ? null : slots.lunch, dinner: slots.dinner === id ? null : slots.dinner };
+    });
     setWeekPlan(np);
   };
 
@@ -951,7 +976,10 @@ export default function MealPlannerApp() {
     if (viewingRecipe?.id === id) setViewingRecipe({ ...viewingRecipe, steps });
   };
 
-  const assignToDay = (day, recipeId) => setWeekPlan({ ...weekPlan, [day]: recipeId || null });
+  const assignToDay = (day, slot, recipeId) => {
+    const current = weekPlan[day] || { lunch: null, dinner: null };
+    setWeekPlan({ ...weekPlan, [day]: { ...current, [slot]: recipeId || null } });
+  };
 
   const importFromLibrary = async (lib) => {
     const existing = recipes.find((r) => r.sourceId === lib.id);
@@ -974,47 +1002,67 @@ export default function MealPlannerApp() {
       return ["meat","fish","vegan","vegetarian"].some(p => r.tags.includes(p) && prefs.proteins[p]);
     };
     const minFilter = (r) => r.minutes <= prefs.maxMinutes;
-    let candidates = HF_LIBRARY.filter(dietFilter).filter(proteinFilter).filter(minFilter);
+
     const userOnly = recipes.filter(r => !r.sourceId).map(r => ({ ...r, _user: true }));
-    candidates = [...candidates, ...userOnly];
-    if (candidates.length === 0) { alert("No recipes match your preferences."); return; }
-    const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-    const numMeals = Math.min(prefs.mealsPerWeek, 7, shuffled.length);
-    const picked = shuffled.slice(0, numMeals);
-    const chosenDays = [...DAYS].sort(() => Math.random() - 0.5).slice(0, numMeals).sort((a,b) => DAYS.indexOf(a) - DAYS.indexOf(b));
-    const np = {}; DAYS.forEach(d => np[d] = null);
+    const allCandidates = [...HF_LIBRARY, ...userOnly];
+
+    // Dinner = default category; Lunch = explicit lunch/soup/salad category
+    const dinnerCandidates = allCandidates.filter(r => !r.category || r.category === 'dinner')
+      .filter(dietFilter).filter(proteinFilter).filter(minFilter);
+    const lunchCandidates = allCandidates.filter(r => ['lunch','soup','salad'].includes(r.category))
+      .filter(dietFilter).filter(minFilter);
+
+    if (dinnerCandidates.length === 0 && lunchCandidates.length === 0) {
+      alert("No recipes match your preferences."); return;
+    }
+
+    const np = {}; DAYS.forEach(d => np[d] = { lunch: null, dinner: null });
     const nr = [...recipes];
     const toUpsert = [];
-    picked.forEach((rec, idx) => {
-      const day = chosenDays[idx];
-      if (rec._user) np[day] = rec.id;
-      else {
-        const ex = nr.find(r => r.sourceId === rec.id);
-        if (ex) np[day] = ex.id;
-        else {
-          const id = `lib-${rec.id}-${Date.now()}-${idx}`;
-          const newRec = { ...rec, id, sourceId: rec.id };
-          nr.push(newRec);
-          toUpsert.push(newRec);
-          np[day] = id;
-        }
-      }
-    });
+
+    const assignRec = (rec, day, slot, uniqIdx) => {
+      if (rec._user) { np[day][slot] = rec.id; return; }
+      const ex = nr.find(r => r.sourceId === rec.id);
+      if (ex) { np[day][slot] = ex.id; return; }
+      const id = `lib-${rec.id}-${Date.now()}-${slot}-${uniqIdx}`;
+      const newRec = { ...rec, id, sourceId: rec.id };
+      nr.push(newRec); toUpsert.push(newRec);
+      np[day][slot] = id;
+    };
+
+    // Fill dinner slots (up to prefs.mealsPerWeek)
+    if (dinnerCandidates.length > 0) {
+      const shuffled = [...dinnerCandidates].sort(() => Math.random() - 0.5);
+      const count = Math.min(prefs.mealsPerWeek, 7, shuffled.length);
+      const days = [...DAYS].sort(() => Math.random() - 0.5).slice(0, count).sort((a,b) => DAYS.indexOf(a) - DAYS.indexOf(b));
+      shuffled.slice(0, count).forEach((rec, idx) => assignRec(rec, days[idx], 'dinner', idx));
+    }
+
+    // Fill lunch slots when lunch-category recipes exist
+    if (lunchCandidates.length > 0) {
+      const shuffled = [...lunchCandidates].sort(() => Math.random() - 0.5);
+      const count = Math.min(prefs.mealsPerWeek, 7, shuffled.length);
+      const days = [...DAYS].sort(() => Math.random() - 0.5).slice(0, count).sort((a,b) => DAYS.indexOf(a) - DAYS.indexOf(b));
+      shuffled.slice(0, count).forEach((rec, idx) => assignRec(rec, days[idx], 'lunch', idx + 100));
+    }
+
     await Promise.all(toUpsert.map(upsertRecipe));
     setRecipes(nr); setWeekPlan(np); setActiveView("plan");
   };
 
   const shoppingList = () => {
     const map = {};
-    Object.values(weekPlan).forEach((rid) => {
-      if (!rid) return;
-      const r = recipes.find((x) => x.id === rid);
-      if (!r) return;
-      const scale = people / (r.people || 2);
-      r.ingredients.forEach((it) => {
-        const key = `${it.name}|${it.unit}`;
-        if (!map[key]) map[key] = { name: it.name, unit: it.unit, quantity: 0, price: it.price };
-        map[key].quantity += it.quantity * scale;
+    Object.values(weekPlan).forEach((slots) => {
+      if (!slots || typeof slots !== 'object') return;
+      [slots.lunch, slots.dinner].filter(Boolean).forEach((rid) => {
+        const r = recipes.find((x) => x.id === rid);
+        if (!r) return;
+        const scale = people / (r.people || 2);
+        r.ingredients.forEach((it) => {
+          const key = `${it.name}|${it.unit}`;
+          if (!map[key]) map[key] = { name: it.name, unit: it.unit, quantity: 0, price: it.price };
+          map[key].quantity += it.quantity * scale;
+        });
       });
     });
     return Object.values(map);
@@ -1168,9 +1216,55 @@ function NutritionStat({ value, label, color, highlight }) {
   );
 }
 
+// ============ MEAL SLOT ROW (shared between day cards) ============
+function MealSlotRow({ slotLabel, recipe, onOpen, onAdd, onClear, recipeStoreCost, tRecipe, t }) {
+  return (
+    <div onClick={() => recipe ? onOpen() : onAdd()}
+      className="ios-btn flex items-center gap-3 px-4 py-3 cursor-pointer">
+      <div className="w-12 flex-shrink-0">
+        <div className="text-[11px] font-semibold" style={{ color: C.textTertiary }}>{slotLabel}</div>
+      </div>
+      <div className="flex-1 min-w-0">
+        {recipe ? (
+          <>
+            <div className="font-semibold truncate flex items-center gap-2">
+              {recipe.emoji && <span>{recipe.emoji}</span>}
+              {tRecipe(recipe).name}
+            </div>
+            <div className="text-xs mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: C.textSecondary }}>
+              {recipe.minutes && <span className="flex items-center gap-1"><Clock size={11} />{recipe.minutes}m</span>}
+              {recipe.nutrition && (<>
+                <span>·</span>
+                <span className="font-bold" style={{ color: C.green }}>{recipe.nutrition.protein}g</span>
+                <span>·</span>
+                <span>{recipe.nutrition.kcal}kcal</span>
+              </>)}
+              <span>·</span>
+              <span>{fmt(recipeStoreCost(recipe))}</span>
+            </div>
+          </>
+        ) : (
+          <div className="text-sm" style={{ color: C.textTertiary }}>{t.tapToAdd}</div>
+        )}
+      </div>
+      {recipe ? (
+        <div className="flex items-center gap-1">
+          <button onClick={(e) => { e.stopPropagation(); onClear(); }}
+            className="ios-btn p-2 rounded-full" style={{ background: C.bg }}>
+            <X size={14} style={{ color: C.textSecondary }} />
+          </button>
+          <ChevronRight size={18} style={{ color: C.textTertiary }} />
+        </div>
+      ) : (
+        <Plus size={18} style={{ color: C.blue }} />
+      )}
+    </div>
+  );
+}
+
 // ============ PLAN VIEW ============
 function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, store, onRandomize, onView, weekStoreCost, weekHFCost, mealsPlanned, t, lang, tRecipe, adjustedPrice, leftovers, onAddBonusRecipe }) {
-  const [picker, setPicker] = useState(null); // day for which picker is open
+  const [picker, setPicker] = useState(null); // { day, slot } for which picker is open
   const total = weekStoreCost;
   const diff = weekHFCost - weekStoreCost;
   const isCheaper = diff > 0;
@@ -1180,22 +1274,21 @@ function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, sto
   const buildRecipeBreakdown = () => {
     const result = [];
     DAYS.forEach((day) => {
-      const rid = weekPlan[day];
-      if (!rid) return;
-      const r = recipes.find(x => x.id === rid);
-      if (!r) return;
-      const scale = people / (r.people || 2);
-      const items = r.ingredients.map((it) => {
-        const scaledQty = it.quantity * scale;
-        const pack = calcPackages(it, scaledQty, adjustedPrice);
-        return {
-          ...it,
-          scaledQuantity: scaledQty,
-          ...pack,
-          cost: pack.isPartial ? pack.proRatedCost : pack.fullPackCost,
-        };
+      const slots = weekPlan[day];
+      if (!slots || typeof slots !== 'object') return;
+      ['lunch', 'dinner'].forEach(slot => {
+        const rid = slots[slot];
+        if (!rid) return;
+        const r = recipes.find(x => x.id === rid);
+        if (!r) return;
+        const scale = people / (r.people || 2);
+        const items = r.ingredients.map((it) => {
+          const scaledQty = it.quantity * scale;
+          const pack = calcPackages(it, scaledQty, adjustedPrice);
+          return { ...it, scaledQuantity: scaledQty, ...pack, cost: pack.isPartial ? pack.proRatedCost : pack.fullPackCost };
+        });
+        result.push({ day, slot, recipe: r, items, total: recipeStoreCost(r) });
       });
-      result.push({ day, recipe: r, items, total: recipeStoreCost(r) });
     });
     return result;
   };
@@ -1224,12 +1317,13 @@ function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, sto
 </style></head><body>
   <h1>${t.weeklyShopping}</h1>
   <div class="subtitle">${STORE_MULTIPLIERS[store].name} · ${people} ${people === 1 ? t.person : t.peopleW} · ${breakdown.length} ${t.meals}</div>
-  ${breakdown.map(({ day, recipe, items, total: rtotal }) => {
+  ${breakdown.map(({ day, slot, recipe, items, total: rtotal }) => {
     const lr = tRecipe(recipe);
+    const slotLabel = slot === 'lunch' ? t.lunch : t.dinner;
     return `
     <div class="recipe-block">
       <div class="recipe-title">
-        <span class="day-label">${DAYS_FULL[day]}</span>
+        <span class="day-label">${DAYS_FULL[day]} · ${slotLabel}</span>
         <span>${recipe.emoji || ""}</span>
         <span>${lr.name}</span>
       </div>
@@ -1257,16 +1351,17 @@ function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, sto
     printHTML(html);
   };
 
-  // Weekly nutrition totals
-  const weekNutrition = Object.values(weekPlan).reduce((acc, rid) => {
-    if (!rid) return acc;
-    const r = recipes.find(x => x.id === rid);
-    if (!r || !r.nutrition) return acc;
-    const scale = people / (r.people || 2);
-    acc.kcal += r.nutrition.kcal * people;
-    acc.protein += r.nutrition.protein * people;
-    acc.carbs += r.nutrition.carbs * people;
-    acc.fat += r.nutrition.fat * people;
+  // Weekly nutrition totals (all slots combined)
+  const weekNutrition = Object.values(weekPlan).reduce((acc, slots) => {
+    if (!slots || typeof slots !== 'object') return acc;
+    [slots.lunch, slots.dinner].filter(Boolean).forEach(rid => {
+      const r = recipes.find(x => x.id === rid);
+      if (!r || !r.nutrition) return;
+      acc.kcal += r.nutrition.kcal * people;
+      acc.protein += r.nutrition.protein * people;
+      acc.carbs += r.nutrition.carbs * people;
+      acc.fat += r.nutrition.fat * people;
+    });
     return acc;
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
@@ -1329,53 +1424,42 @@ function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, sto
       {/* Day list */}
       <div className="ios-card overflow-hidden">
         {DAYS.map((day, idx) => {
-          const recipeId = weekPlan[day];
-          const recipe = recipes.find((r) => r.id === recipeId);
+          const slots = weekPlan[day] || { lunch: null, dinner: null };
+          const lunchRecipe = slots.lunch ? recipes.find(r => r.id === slots.lunch) : null;
+          const dinnerRecipe = slots.dinner ? recipes.find(r => r.id === slots.dinner) : null;
           const isLast = idx === DAYS.length - 1;
           return (
             <div key={day}>
-              <div onClick={() => recipe ? onView(recipe) : setPicker(day)}
-                className="ios-btn flex items-center gap-3 px-4 py-3.5 cursor-pointer">
-                <div className="w-12 flex-shrink-0">
-                  <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.textTertiary }}>{day}</div>
-                  <div className="text-xs" style={{ color: C.textSecondary }}>{DAYS_FULL[day].slice(0,3)}</div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  {recipe ? (
-                    <>
-                      <div className="font-semibold truncate flex items-center gap-2">
-                        {recipe.emoji && <span>{recipe.emoji}</span>}
-                        {tRecipe(recipe).name}
-                      </div>
-                      <div className="text-xs mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: C.textSecondary }}>
-                        {recipe.minutes && <span className="flex items-center gap-1"><Clock size={11} />{recipe.minutes}m</span>}
-                        {recipe.nutrition && (<>
-                          <span>·</span>
-                          <span className="font-bold" style={{ color: C.green }}>{recipe.nutrition.protein}g</span>
-                          <span>·</span>
-                          <span>{recipe.nutrition.kcal}kcal</span>
-                        </>)}
-                        <span>·</span>
-                        <span>{fmt(recipeStoreCost(recipe))}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-sm" style={{ color: C.textTertiary }}>{t.tapToAdd}</div>
-                  )}
-                </div>
-                {recipe ? (
-                  <div className="flex items-center gap-1">
-                    <button onClick={(e) => { e.stopPropagation(); assignToDay(day, null); }}
-                      className="ios-btn p-2 rounded-full" style={{ background: C.bg }}>
-                      <X size={14} style={{ color: C.textSecondary }} />
-                    </button>
-                    <ChevronRight size={18} style={{ color: C.textTertiary }} />
-                  </div>
-                ) : (
-                  <Plus size={18} style={{ color: C.blue }} />
-                )}
+              {/* Day header */}
+              <div className="px-4 pt-2.5 pb-0.5 flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.textTertiary }}>{day}</span>
+                <span className="text-[10px]" style={{ color: C.textTertiary }}>·</span>
+                <span className="text-[10px] font-medium" style={{ color: C.textTertiary }}>{DAYS_FULL[day]}</span>
               </div>
-              {!isLast && <div className="h-px ml-[72px]" style={{ background: C.separator }} />}
+              {/* Lunch slot */}
+              <MealSlotRow
+                slotLabel={t.lunch}
+                recipe={lunchRecipe}
+                onOpen={() => onView(lunchRecipe)}
+                onAdd={() => setPicker({ day, slot: 'lunch' })}
+                onClear={() => assignToDay(day, 'lunch', null)}
+                recipeStoreCost={recipeStoreCost}
+                tRecipe={tRecipe}
+                t={t}
+              />
+              <div className="h-px ml-4" style={{ background: C.separator }} />
+              {/* Dinner slot */}
+              <MealSlotRow
+                slotLabel={t.dinner}
+                recipe={dinnerRecipe}
+                onOpen={() => onView(dinnerRecipe)}
+                onAdd={() => setPicker({ day, slot: 'dinner' })}
+                onClear={() => assignToDay(day, 'dinner', null)}
+                recipeStoreCost={recipeStoreCost}
+                tRecipe={tRecipe}
+                t={t}
+              />
+              {!isLast && <div className="h-2" style={{ background: C.bg }} />}
             </div>
           );
         })}
@@ -1395,7 +1479,7 @@ function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, people, sto
       )}
 
       {picker && (
-        <DayPickerSheet day={picker} recipes={recipes} onPick={(id) => { assignToDay(picker, id); setPicker(null); }} onClose={() => setPicker(null)} recipeStoreCost={recipeStoreCost} t={t} lang={lang} tRecipe={tRecipe} />
+        <DayPickerSheet day={picker.day} slot={picker.slot} recipes={recipes} onPick={(id) => { assignToDay(picker.day, picker.slot, id); setPicker(null); }} onClose={() => setPicker(null)} recipeStoreCost={recipeStoreCost} t={t} lang={lang} tRecipe={tRecipe} />
       )}
     </div>
   );
@@ -1735,14 +1819,15 @@ function LeftoversSection({ leftovers, t, lang, people, onAddBonusRecipe, onView
   );
 }
 
-function DayPickerSheet({ day, recipes, onPick, onClose, recipeStoreCost, t, lang, tRecipe }) {
+function DayPickerSheet({ day, slot, recipes, onPick, onClose, recipeStoreCost, t, lang, tRecipe }) {
   const DAYS_FULL = lang === "sr" ? DAYS_FULL_SR : DAYS_FULL_EN;
+  const slotLabel = slot === 'lunch' ? t.lunch : t.dinner;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center fade-in" style={{ background: "rgba(0,0,0,0.4)" }} onClick={onClose}>
       <div className="w-full max-w-3xl max-h-[80vh] flex flex-col rounded-t-3xl slide-up overflow-hidden" style={{ background: C.bg }} onClick={(e) => e.stopPropagation()}>
         <div className="px-5 pt-3 pb-4">
           <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: C.separator }} />
-          <h3 className="text-xl font-bold">{t.pickMealFor} {DAYS_FULL[day]}</h3>
+          <h3 className="text-xl font-bold">{t.pickMealFor} {DAYS_FULL[day]} · {slotLabel}</h3>
         </div>
         <div className="flex-1 overflow-y-auto px-4 pb-8 space-y-2">
           {recipes.length === 0 ? (
@@ -1922,30 +2007,24 @@ function ActionTile({ icon: Icon, label, onClick, color }) {
 function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent, shoppingList, adjustedPrice, store, people, mealsPlanned, t, lang, weekPlan, recipes, tRecipe, recipeStoreCost }) {
   const [shopMode, setShopMode] = useState("combined"); // "combined" or "byRecipe"
 
-  // Build per-recipe shopping breakdown
+  // Build per-recipe shopping breakdown (all slots)
   const buildRecipeBreakdown = () => {
     const result = [];
     DAYS.forEach((day) => {
-      const rid = weekPlan[day];
-      if (!rid) return;
-      const r = recipes.find(x => x.id === rid);
-      if (!r) return;
-      const scale = people / (r.people || 2);
-      const items = r.ingredients.map((it) => {
-        const scaledQty = it.quantity * scale;
-        const pack = calcPackages(it, scaledQty, adjustedPrice);
-        return {
-          ...it,
-          scaledQuantity: scaledQty,
-          ...pack,
-          cost: pack.isPartial ? pack.proRatedCost : pack.fullPackCost,
-        };
-      });
-      result.push({
-        day,
-        recipe: r,
-        items,
-        total: recipeStoreCost(r),
+      const slots = weekPlan[day];
+      if (!slots || typeof slots !== 'object') return;
+      ['lunch', 'dinner'].forEach(slot => {
+        const rid = slots[slot];
+        if (!rid) return;
+        const r = recipes.find(x => x.id === rid);
+        if (!r) return;
+        const scale = people / (r.people || 2);
+        const items = r.ingredients.map((it) => {
+          const scaledQty = it.quantity * scale;
+          const pack = calcPackages(it, scaledQty, adjustedPrice);
+          return { ...it, scaledQuantity: scaledQty, ...pack, cost: pack.isPartial ? pack.proRatedCost : pack.fullPackCost };
+        });
+        result.push({ day, slot, recipe: r, items, total: recipeStoreCost(r) });
       });
     });
     return result;
@@ -1979,12 +2058,13 @@ function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent, shopp
   <h1>${t.weeklyShopping}</h1>
   <div class="subtitle">${STORE_MULTIPLIERS[store].name} · ${people} ${people === 1 ? t.person : t.peopleW} · ${recipeBreakdown.length} ${t.meals}</div>
 
-  ${recipeBreakdown.map(({ day, recipe, items, total }) => {
+  ${recipeBreakdown.map(({ day, slot, recipe, items, total }) => {
     const lr = tRecipe(recipe);
+    const slotLabel = slot === 'lunch' ? t.lunch : t.dinner;
     return `
     <div class="recipe-block">
       <div class="recipe-title">
-        <span class="day-label">${DAYS_FULL[day]}</span>
+        <span class="day-label">${DAYS_FULL[day]} · ${slotLabel}</span>
         <span>${recipe.emoji || ""}</span>
         <span>${lr.name}</span>
       </div>
@@ -2094,13 +2174,14 @@ function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent, shopp
         {/* By recipe view */}
         {shopMode === "byRecipe" && (
           <div>
-            {recipeBreakdown.map(({ day, recipe, items, total }, ridx) => {
+            {recipeBreakdown.map(({ day, slot, recipe, items, total }, ridx) => {
               const lr = tRecipe(recipe);
+              const slotLabel = slot === 'lunch' ? t.lunch : t.dinner;
               return (
-                <div key={day} style={{ borderBottom: ridx < recipeBreakdown.length - 1 ? `4px solid ${C.bg}` : "none" }}>
+                <div key={`${day}-${slot}`} style={{ borderBottom: ridx < recipeBreakdown.length - 1 ? `4px solid ${C.bg}` : "none" }}>
                   <div className="px-4 py-3 flex items-center gap-2" style={{ background: C.bg }}>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: C.blue, color: "#fff" }}>
-                      {DAYS_FULL[day]}
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: slot === 'lunch' ? C.orange : C.blue, color: "#fff" }}>
+                      {DAYS_FULL[day]} {slotLabel}
                     </span>
                     <span className="text-xl">{recipe.emoji}</span>
                     <span className="font-semibold text-sm flex-1 truncate">{lr.name}</span>
