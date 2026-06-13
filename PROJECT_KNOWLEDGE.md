@@ -57,13 +57,14 @@ GitHub Actions secrets required: `VITE_ANTHROPIC_API_KEY`, `VITE_SUPABASE_URL`, 
 ## 11. Active feature
 | ID | Title | Status | Branch | JTBD |
 |---|---|---|---|---|
-| #10 | Lunch + Dinner slots | in-prototype | feat/meal-slots-lunch-dinner | As a home cook, I want to plan both lunch and dinner for each day of the week so that my shopping list covers everything I need to buy in one go. |
+| #13 | Live store prices | in-prototype | feat/live-store-prices | As a home cook, I want prices to reflect the actual store I shop at so that my weekly cost estimate is accurate. |
 
 ### Paused features
 | ID | Title | Status | Branch | JTBD |
 |---|---|---|---|---|
-| #7 | Supabase recipes | in-prototype | feat/supabase-recipes | As a home cook, I want my saved recipes stored in Supabase so I can access them from any device and never lose them when the browser is cleared. |
 
 ## 12. Feature audit log
 | ID | Title | Handed off | Notes |
 |---|---|---|---|
+| #7 | Supabase recipes | 2026-06-13 | Merged in PR #8 |
+| #10 | Lunch + Dinner slots | 2026-06-13 | Merged in PR #12 |
