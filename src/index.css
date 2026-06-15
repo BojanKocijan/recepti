@@ -1,7 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens (RGB channels — enables Tailwind opacity modifiers) ───────── */
+:root {
+  --c-bg:             242 242 247;
+  --c-card:           255 255 255;
+  --c-card-alt:       250 250 250;
+  --c-text:           28 28 30;
+  --c-text-secondary: 110 110 115;
+  --c-text-tertiary:  174 174 178;
+  --c-separator:      229 229 234;
+  --c-blue:           0 122 255;
+  --c-blue-soft:      232 240 254;
+  --c-green:          52 199 89;
+  --c-green-soft:     229 248 234;
+  --c-red:            255 59 48;
+  --c-orange:         255 149 0;
+  --c-orange-soft:    255 243 224;
+  --c-purple:         175 82 222;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────── */
 html, body, #root {
   height: 100%;
 }
@@ -10,13 +32,86 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+  color: rgb(var(--c-text));
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* ── iOS-style component primitives ─────────────────────────────────────────── */
+.ios-card {
+  background: rgb(var(--c-card));
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
+
+.ios-btn {
+  transition: opacity 0.15s ease;
+}
+.ios-btn:active {
+  opacity: 0.5;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.slide-up { animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.fade-in { animation: fadeIn 0.2s ease; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ── Utility: 0.5px separator borders ───────────────────────────────────────── */
+@layer utilities {
+  .separator-b { border-bottom: 0.5px solid rgb(var(--c-separator)); }
+  .separator-t { border-top:    0.5px solid rgb(var(--c-separator)); }
+  .separator-l { border-left:   0.5px solid rgb(var(--c-separator)); }
+
+  /* Glassmorphism panels */
+  .glass-bg {
+    background: rgba(242,242,247,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .glass-white {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .glass-white-95 {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .glass-white-92 {
+    background: rgba(242,242,247,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Coloured button shadows */
+  .shadow-blue  { box-shadow: 0 4px 14px rgba(0,122,255,0.3); }
+  .shadow-green { box-shadow: 0 4px 14px rgba(52,199,89,0.3); }
+
+  /* Range input accent */
+  .accent-blue { accent-color: rgb(var(--c-blue)); }
+
+  /* Overlay backdrop */
+  .overlay-dark  { background: rgba(0,0,0,0.5); }
+  .overlay-light { background: rgba(0,0,0,0.4); }
+
+  /* Leftover suggestion card — warm gradient */
+  .card-leftover {
+    background: linear-gradient(135deg, #FFF8E7 0%, #FFE8D9 100%);
+    border: 1px solid rgb(var(--c-orange) / 0.2);
+  }
 }

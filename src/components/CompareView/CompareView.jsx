@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ShoppingCart, ChefHat, TrendingDown, TrendingUp, Printer } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { DAYS, DAYS_FULL_EN, DAYS_FULL_SR, STORE_MULTIPLIERS, HF_SHIPPING } from "../../constants/config";
 import { fmt, printHTML, calcPackages } from "../../utils/pricing";
 import { tIng } from "../../data/ingredientDb";
@@ -95,7 +94,7 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
       <div className="ios-card p-8 text-center">
         <div className="text-5xl mb-3">🛒</div>
         <p className="font-semibold text-lg">{t.nothingPlanned}</p>
-        <p className="text-sm mt-1" style={{ color: C.textSecondary }}>{t.planSomeMeals}</p>
+        <p className="text-sm mt-1 text-c-text-secondary">{t.planSomeMeals}</p>
       </div>
     );
   }
@@ -104,61 +103,63 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
   const DAYS_FULL = lang === "sr" ? DAYS_FULL_SR : DAYS_FULL_EN;
   return (
     <div className="space-y-4">
-      <div className="ios-card p-5" style={{ background: isHFCheaper ? C.orangeSoft : C.greenSoft }}>
+      <div className={`ios-card p-5 ${isHFCheaper ? "bg-c-orange-soft" : "bg-c-green-soft"}`}>
         <div className="flex items-center gap-2 mb-2">
-          {isHFCheaper ? <TrendingUp size={16} style={{ color: C.orange }} /> : <TrendingDown size={16} style={{ color: C.green }} />}
-          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: isHFCheaper ? C.orange : C.green }}>
+          {isHFCheaper
+            ? <TrendingUp size={16} className="text-c-orange" />
+            : <TrendingDown size={16} className="text-c-green" />}
+          <span className={`text-xs font-semibold uppercase tracking-wider ${isHFCheaper ? "text-c-orange" : "text-c-green"}`}>
             {isHFCheaper ? t.helloFreshWins : t.cookingWins}
           </span>
         </div>
-        <div className="text-5xl font-bold tracking-tight" style={{ color: isHFCheaper ? C.orange : C.green }}>
+        <div className={`text-5xl font-bold tracking-tight ${isHFCheaper ? "text-c-orange" : "text-c-green"}`}>
           {fmt(Math.abs(savings))}
         </div>
-        <div className="text-sm mt-1" style={{ color: C.text }}>
+        <div className="text-sm mt-1 text-c-text">
           {isHFCheaper ? `${Math.abs(savingsPercent).toFixed(0)}${t.lessThanCooking}` : `${savingsPercent.toFixed(0)}${t.savedByCooking}`}
           {" · "}
-          <span style={{ color: C.textSecondary }}>{fmt(Math.abs(savings * 52))}{t.perYear}</span>
+          <span className="text-c-text-secondary">{fmt(Math.abs(savings * 52))}{t.perYear}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="ios-card p-4">
           <div className="flex items-center gap-1.5 mb-2">
-            <ShoppingCart size={14} style={{ color: C.textSecondary }} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: C.textSecondary }}>{STORE_MULTIPLIERS[store].name}</span>
+            <ShoppingCart size={14} className="text-c-text-secondary" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-c-text-secondary">{STORE_MULTIPLIERS[store].name}</span>
           </div>
           <div className="text-3xl font-bold tracking-tight">{fmt(weekStoreCost)}</div>
-          <div className="text-[11px] mt-0.5" style={{ color: C.textTertiary }}>{mealsPlanned} {t.meals} · {mealsPlanned * people} {t.portions}</div>
+          <div className="text-[11px] mt-0.5 text-c-text-tertiary">{mealsPlanned} {t.meals} · {mealsPlanned * people} {t.portions}</div>
         </div>
         <div className="ios-card p-4">
           <div className="flex items-center gap-1.5 mb-2">
-            <ChefHat size={14} style={{ color: C.textSecondary }} />
-            <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: C.textSecondary }}>HelloFresh</span>
+            <ChefHat size={14} className="text-c-text-secondary" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-c-text-secondary">HelloFresh</span>
           </div>
           <div className="text-3xl font-bold tracking-tight">{fmt(weekHFCost)}</div>
-          <div className="text-[11px] mt-0.5" style={{ color: C.textTertiary }}>{t.inclShipping.replace("{shipping}", fmt(HF_SHIPPING))}</div>
+          <div className="text-[11px] mt-0.5 text-c-text-tertiary">{t.inclShipping.replace("{shipping}", fmt(HF_SHIPPING))}</div>
         </div>
       </div>
 
       <div className="ios-card overflow-hidden">
-        <div className="px-4 py-3 border-b flex items-center justify-between gap-2" style={{ borderColor: C.separator }}>
+        <div className="px-4 py-3 separator-b flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-base truncate">{t.weeklyShopping}</h3>
-            <p className="text-xs mt-0.5 truncate" style={{ color: C.textSecondary }}>{t.packsToBuy} {STORE_MULTIPLIERS[store].name}</p>
+            <p className="text-xs mt-0.5 truncate text-c-text-secondary">{t.packsToBuy} {STORE_MULTIPLIERS[store].name}</p>
           </div>
-          <button onClick={handlePrintWeekly} className="ios-btn flex-shrink-0 p-2 rounded-full flex items-center gap-1" style={{ background: C.blueSoft, color: C.blue }}>
+          <button onClick={handlePrintWeekly} className="ios-btn flex-shrink-0 p-2 rounded-full flex items-center gap-1 bg-c-blue-soft text-c-blue">
             <Printer size={16} strokeWidth={2.2} />
             <span className="text-xs font-bold pr-1">{t.printList}</span>
           </button>
         </div>
 
-        <div className="px-3 py-2 flex gap-1" style={{ borderBottom: `0.5px solid ${C.separator}` }}>
-          <button onClick={() => setShopMode("byRecipe")} className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition"
-            style={{ background: shopMode === "byRecipe" ? C.blue : "transparent", color: shopMode === "byRecipe" ? "#fff" : C.text }}>
+        <div className="px-3 py-2 flex gap-1 separator-b">
+          <button onClick={() => setShopMode("byRecipe")}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${shopMode === "byRecipe" ? "bg-c-blue text-white" : "text-c-text"}`}>
             {t.byRecipe}
           </button>
-          <button onClick={() => setShopMode("combined")} className="flex-1 py-1.5 rounded-lg text-xs font-semibold transition"
-            style={{ background: shopMode === "combined" ? C.blue : "transparent", color: shopMode === "combined" ? "#fff" : C.text }}>
+          <button onClick={() => setShopMode("combined")}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${shopMode === "combined" ? "bg-c-blue text-white" : "text-c-text"}`}>
             {t.combined}
           </button>
         </div>
@@ -169,9 +170,9 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
               const lr = tRecipe(recipe);
               const slotLabel = slot === 'lunch' ? t.lunch : t.dinner;
               return (
-                <div key={`${day}-${slot}`} style={{ borderBottom: ridx < recipeBreakdown.length - 1 ? `4px solid ${C.bg}` : "none" }}>
-                  <div className="px-4 py-3 flex items-center gap-2" style={{ background: C.bg }}>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: slot === 'lunch' ? C.orange : C.blue, color: "#fff" }}>
+                <div key={`${day}-${slot}`} className={ridx < recipeBreakdown.length - 1 ? "border-b-4 border-c-bg" : ""}>
+                  <div className="px-4 py-3 flex items-center gap-2 bg-c-bg">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white ${slot === 'lunch' ? "bg-c-orange" : "bg-c-blue"}`}>
                       {DAYS_FULL[day]} {slotLabel}
                     </span>
                     <span className="text-xl">{recipe.emoji}</span>
@@ -179,13 +180,13 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
                     <span className="text-sm font-bold">{fmt(total)}</span>
                   </div>
                   {items.map((it, iidx) => (
-                    <div key={iidx} className="px-4 py-2 flex items-center gap-3" style={{ borderBottom: iidx < items.length - 1 ? `0.5px solid ${C.separator}` : "none" }}>
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.blueSoft }}>
-                        <span className="text-xs font-bold" style={{ color: C.blue }}>{it.packsNeeded}</span>
+                    <div key={iidx} className={`px-4 py-2 flex items-center gap-3 ${iidx < items.length - 1 ? "separator-b" : ""}`}>
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-c-blue-soft">
+                        <span className="text-xs font-bold text-c-blue">{it.packsNeeded}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm truncate">{tIng(it.name, lang)}</div>
-                        <div className="text-[11px]" style={{ color: C.textTertiary }}>{it.packLabel}</div>
+                        <div className="text-[11px] text-c-text-tertiary">{it.packLabel}</div>
                       </div>
                       <div className="text-sm font-semibold">{fmt(it.cost)}</div>
                     </div>
@@ -202,13 +203,13 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
               const pack = calcPackages(item, item.quantity, adjustedPrice);
               const cost = pack.isPartial ? pack.proRatedCost : pack.fullPackCost;
               return (
-                <div key={i} className="px-4 py-2.5 flex items-center gap-3" style={{ borderBottom: i < shoppingList.length - 1 ? `0.5px solid ${C.separator}` : "none" }}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.blueSoft }}>
-                    <span className="text-xs font-bold" style={{ color: C.blue }}>{pack.packsNeeded}</span>
+                <div key={i} className={`px-4 py-2.5 flex items-center gap-3 ${i < shoppingList.length - 1 ? "separator-b" : ""}`}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-c-blue-soft">
+                    <span className="text-xs font-bold text-c-blue">{pack.packsNeeded}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{tIng(item.name, lang)}</div>
-                    <div className="text-[11px]" style={{ color: C.textTertiary }}>{pack.packLabel}</div>
+                    <div className="text-[11px] text-c-text-tertiary">{pack.packLabel}</div>
                   </div>
                   <div className="font-semibold text-sm">{fmt(cost)}</div>
                 </div>
@@ -217,7 +218,7 @@ export function CompareView({ weekStoreCost, weekHFCost, savings, savingsPercent
           </div>
         )}
 
-        <div className="px-4 py-3 flex items-center justify-between" style={{ background: C.text, color: "#fff" }}>
+        <div className="px-4 py-3 flex items-center justify-between bg-c-text text-white">
           <span className="text-xs font-semibold uppercase tracking-wider opacity-70">{t.grandTotal}</span>
           <span className="text-xl font-bold">{fmt(weekStoreCost)}</span>
         </div>

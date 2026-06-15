@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { Sparkles, X, Loader2, Camera, Upload } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { INGREDIENT_DB, matchIngredient } from "../../data/ingredientDb";
 
 export function ScanModal({ onClose, onScanned, people, t }) {
@@ -101,14 +100,16 @@ export function ScanModal({ onClose, onScanned, people, t }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end fade-in" style={{ background: "rgba(0,0,0,0.5)" }} onClick={stage !== "scanning" ? onClose : undefined}>
-      <div className="w-full max-w-3xl mx-auto rounded-t-3xl slide-up overflow-hidden" style={{ background: C.bg }} onClick={(e) => e.stopPropagation()}>
-        <div className="px-4 pt-3 pb-3" style={{ background: C.card, borderBottom: `0.5px solid ${C.separator}` }}>
-          <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: C.separator }} />
+    <div className="fixed inset-0 z-50 flex items-end fade-in overlay-dark" onClick={stage !== "scanning" ? onClose : undefined}>
+      <div className="w-full max-w-3xl mx-auto rounded-t-3xl slide-up overflow-hidden bg-c-bg" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 pt-3 pb-3 bg-c-card separator-b">
+          <div className="w-10 h-1 rounded-full mx-auto mb-3 bg-c-separator" />
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Sparkles size={18} style={{ color: C.purple }} /> {t.scanRecipe}</h2>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Sparkles size={18} className="text-c-purple" /> {t.scanRecipe}
+            </h2>
             {stage !== "scanning" && (
-              <button onClick={onClose} className="ios-btn p-2 rounded-full" style={{ background: C.bg }}>
+              <button onClick={onClose} className="ios-btn p-2 rounded-full bg-c-bg">
                 <X size={18} />
               </button>
             )}
@@ -118,35 +119,36 @@ export function ScanModal({ onClose, onScanned, people, t }) {
         <div className="p-5">
           {stage === "pick" && (
             <>
-              <p className="text-sm mb-4 text-center" style={{ color: C.textSecondary }}>
+              <p className="text-sm mb-4 text-center text-c-text-secondary">
                 {t.scanHint}
               </p>
               <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={(e) => handleFile(e.target.files?.[0])} className="hidden" />
               <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleFile(e.target.files?.[0])} className="hidden" />
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => cameraInputRef.current?.click()} className="ios-btn ios-card p-6 flex flex-col items-center gap-2" style={{ background: C.blue, color: "#fff" }}>
+                <button onClick={() => cameraInputRef.current?.click()} className="ios-btn ios-card p-6 flex flex-col items-center gap-2 bg-c-blue text-white">
                   <Camera size={28} strokeWidth={2} />
                   <span className="text-sm font-semibold">{t.camera}</span>
                 </button>
                 <button onClick={() => fileInputRef.current?.click()} className="ios-btn ios-card p-6 flex flex-col items-center gap-2">
-                  <Upload size={28} strokeWidth={2} style={{ color: C.blue }} />
+                  <Upload size={28} strokeWidth={2} className="text-c-blue" />
                   <span className="text-sm font-semibold">{t.upload}</span>
                 </button>
               </div>
-              {error && <p className="text-xs mt-3 text-center" style={{ color: C.red }}>{error}</p>}
+              {error && <p className="text-xs mt-3 text-center text-c-red">{error}</p>}
             </>
           )}
 
           {stage === "preview" && (
             <>
-              <div className="rounded-2xl overflow-hidden mb-4" style={{ background: C.card }}>
+              <div className="rounded-2xl overflow-hidden mb-4 bg-c-card">
                 <img src={`data:${imageType};base64,${imageData}`} alt="Recipe" className="w-full max-h-72 object-contain" />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => { setStage("pick"); setImageData(null); }} className="ios-btn flex-1 py-3 rounded-2xl font-semibold" style={{ background: C.card, color: C.text, border: `1px solid ${C.separator}` }}>
+                <button onClick={() => { setStage("pick"); setImageData(null); }}
+                  className="ios-btn flex-1 py-3 rounded-2xl font-semibold bg-c-card text-c-text border border-c-separator">
                   {t.retake}
                 </button>
-                <button onClick={scan} className="ios-btn flex-1 py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-1.5" style={{ background: C.blue }}>
+                <button onClick={scan} className="ios-btn flex-1 py-3 rounded-2xl font-semibold text-white flex items-center justify-center gap-1.5 bg-c-blue">
                   <Sparkles size={14} /> {t.extract}
                 </button>
               </div>
@@ -155,9 +157,9 @@ export function ScanModal({ onClose, onScanned, people, t }) {
 
           {stage === "scanning" && (
             <div className="py-12 text-center">
-              <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: C.blue }} />
+              <Loader2 size={32} className="animate-spin mx-auto mb-3 text-c-blue" />
               <p className="font-semibold">{t.readingRecipe}</p>
-              <p className="text-xs mt-1" style={{ color: C.textSecondary }}>{t.extractingHint}</p>
+              <p className="text-xs mt-1 text-c-text-secondary">{t.extractingHint}</p>
             </div>
           )}
 
@@ -165,8 +167,9 @@ export function ScanModal({ onClose, onScanned, people, t }) {
             <div className="py-6 text-center">
               <div className="text-3xl mb-2">😕</div>
               <p className="font-semibold mb-1">{t.didntWork}</p>
-              <p className="text-xs mb-4" style={{ color: C.textSecondary }}>{error}</p>
-              <button onClick={() => { setStage("pick"); setImageData(null); setError(""); }} className="ios-btn px-5 py-2 rounded-full font-semibold text-white" style={{ background: C.blue }}>
+              <p className="text-xs mb-4 text-c-text-secondary">{error}</p>
+              <button onClick={() => { setStage("pick"); setImageData(null); setError(""); }}
+                className="ios-btn px-5 py-2 rounded-full font-semibold text-white bg-c-blue">
                 {t.tryAgain}
               </button>
             </div>
