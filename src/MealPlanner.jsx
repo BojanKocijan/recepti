@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, ChefHat, TrendingDown, Settings, Loader2 } from "lucide-react";
-import { C } from "./constants/tokens";
 import { T } from "./constants/translations";
 import { DAYS, STORE_MULTIPLIERS, HF_SHIPPING, DEFAULT_PREFS, getHFPricePerPortion } from "./constants/config";
 import { calcPackages, calcLeftover } from "./utils/pricing";
@@ -315,39 +314,25 @@ export default function MealPlannerApp() {
   const handleScanned = (s) => { setEditingRecipe(s); setShowScanModal(false); setShowRecipeModal(true); };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
-      <Loader2 className="animate-spin" style={{ color: C.blue }} size={32} />
+    <div className="min-h-screen flex items-center justify-center bg-c-bg">
+      <Loader2 className="animate-spin text-c-blue" size={32} />
     </div>
   );
 
   return (
-    <div className="min-h-screen pb-20" style={{ background: C.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif", color: C.text }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-        .ios-card { background: ${C.card}; border-radius: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-        .ios-btn { transition: opacity 0.15s ease; }
-        .ios-btn:active { opacity: 0.5; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .slide-up { animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .fade-in { animation: fadeIn 0.2s ease; }
-      `}</style>
-
-      <header className="sticky top-0 z-40" style={{ background: "rgba(242,242,247,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: `0.5px solid ${C.separator}` }}>
+    <div className="min-h-screen pb-20 bg-c-bg">
+      <header className="sticky top-0 z-40 glass-bg separator-b">
         <div className="max-w-3xl mx-auto px-4 pt-3 pb-2 flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wider" style={{ color: C.textTertiary }}>
+            <div className="text-[11px] font-medium uppercase tracking-wider text-c-text-tertiary">
               {activeView === "plan" ? t.thisWeek : activeView === "recipes" ? t.recipesShort : t.compareShort}
             </div>
             <h1 className="text-2xl font-bold mt-0.5">
               {activeView === "plan" ? t.weekPlan : activeView === "recipes" ? t.recipes : t.compare}
             </h1>
           </div>
-          <button onClick={() => setShowPrefsModal(true)} className="ios-btn p-2 rounded-full" style={{ background: C.card }}>
-            <Settings size={20} style={{ color: C.blue }} strokeWidth={2} />
+          <button onClick={() => setShowPrefsModal(true)} className="ios-btn p-2 rounded-full bg-c-card">
+            <Settings size={20} className="text-c-blue" strokeWidth={2} />
           </button>
         </div>
 
@@ -403,7 +388,7 @@ export default function MealPlannerApp() {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: `0.5px solid ${C.separator}` }}>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 glass-white separator-t">
         <div className="max-w-3xl mx-auto px-4 py-2 flex justify-around">
           {[
             { id: "plan", label: t.week, Icon: Calendar },
@@ -411,8 +396,8 @@ export default function MealPlannerApp() {
             { id: "compare", label: t.compareShort, Icon: TrendingDown },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveView(id)} className="ios-btn flex flex-col items-center gap-0.5 px-6 py-1">
-              <Icon size={24} strokeWidth={activeView === id ? 2.4 : 1.8} style={{ color: activeView === id ? C.blue : C.textTertiary }} />
-              <span className="text-[10px] font-medium" style={{ color: activeView === id ? C.blue : C.textTertiary }}>{label}</span>
+              <Icon size={24} strokeWidth={activeView === id ? 2.4 : 1.8} className={activeView === id ? "text-c-blue" : "text-c-text-tertiary"} />
+              <span className={`text-[10px] font-medium ${activeView === id ? "text-c-blue" : "text-c-text-tertiary"}`}>{label}</span>
             </button>
           ))}
         </div>

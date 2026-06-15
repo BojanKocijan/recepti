@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Shuffle, Printer } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { DAYS, DAYS_FULL_EN, DAYS_FULL_SR, STORE_MULTIPLIERS } from "../../constants/config";
 import { fmt, printHTML, calcPackages } from "../../utils/pricing";
 import { tIng } from "../../data/ingredientDb";
@@ -113,34 +112,33 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
     <div className="space-y-4">
       {mealsPlanned > 0 && (
         <div className="ios-card p-5">
-          <div className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: C.textTertiary }}>
+          <div className="text-[11px] font-medium uppercase tracking-wider mb-1 text-c-text-tertiary">
             {t.weekTotalAt} {STORE_MULTIPLIERS[store].name}
           </div>
           <div className="flex items-end gap-3 flex-wrap">
             <div className="text-4xl font-bold tracking-tight">{fmt(total)}</div>
             {weekHFCost > 0 && (
-              <div className="px-2.5 py-1 rounded-full text-xs font-semibold mb-1.5"
-                style={{ background: isCheaper ? C.greenSoft : C.orangeSoft, color: isCheaper ? C.green : C.orange }}>
+              <div className={`px-2.5 py-1 rounded-full text-xs font-semibold mb-1.5 ${isCheaper ? "bg-c-green-soft text-c-green" : "bg-c-orange-soft text-c-orange"}`}>
                 {isCheaper ? "−" : "+"}{fmt(Math.abs(diff))} vs HelloFresh
               </div>
             )}
           </div>
-          <div className="text-sm mt-1" style={{ color: C.textSecondary }}>
+          <div className="text-sm mt-1 text-c-text-secondary">
             {mealsPlanned} {t.mealsPlanned}
           </div>
 
           {weekNutrition.protein > 0 && (
-            <div className="mt-4 pt-4 border-t" style={{ borderColor: C.separator }}>
-              <div className="text-[11px] font-medium uppercase tracking-wider mb-2" style={{ color: C.textTertiary }}>
+            <div className="mt-4 pt-4 border-t border-c-separator">
+              <div className="text-[11px] font-medium uppercase tracking-wider mb-2 text-c-text-tertiary">
                 {t.nutritionWeek} ({mealsPlanned * people} {t.portions})
               </div>
               <div className="grid grid-cols-4 gap-2">
-                <NutritionStat value={Math.round(weekNutrition.kcal)} label={t.kcal} color={C.text} />
-                <NutritionStat value={Math.round(weekNutrition.protein) + "g"} label={t.protein} color={C.green} highlight />
-                <NutritionStat value={Math.round(weekNutrition.carbs) + "g"} label={t.carbs} color={C.text} />
-                <NutritionStat value={Math.round(weekNutrition.fat) + "g"} label={t.fat} color={C.text} />
+                <NutritionStat value={Math.round(weekNutrition.kcal)} label={t.kcal} />
+                <NutritionStat value={Math.round(weekNutrition.protein) + "g"} label={t.protein} highlight />
+                <NutritionStat value={Math.round(weekNutrition.carbs) + "g"} label={t.carbs} />
+                <NutritionStat value={Math.round(weekNutrition.fat) + "g"} label={t.fat} />
               </div>
-              <div className="text-[11px] mt-2 text-center" style={{ color: C.textTertiary }}>
+              <div className="text-[11px] mt-2 text-center text-c-text-tertiary">
                 ≈ {Math.round(weekNutrition.kcal / mealsPlanned / people)} {t.kcal} · {Math.round(weekNutrition.protein / mealsPlanned / people)}g {t.protein} {t.perPortion}
               </div>
             </div>
@@ -149,14 +147,12 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
       )}
 
       <div className="flex gap-2">
-        <button onClick={onRandomize} className="ios-btn flex-1 p-4 rounded-2xl flex items-center justify-center gap-2 font-semibold text-white"
-          style={{ background: C.blue }}>
+        <button onClick={onRandomize} className="ios-btn flex-1 p-4 rounded-2xl flex items-center justify-center gap-2 font-semibold text-white bg-c-blue">
           <Shuffle size={18} strokeWidth={2.4} />
           {t.randomizeWeek}
         </button>
         {mealsPlanned > 0 && (
-          <button onClick={handlePrintWeek} className="ios-btn flex-shrink-0 px-4 rounded-2xl flex items-center justify-center gap-2 font-semibold"
-            style={{ background: C.card, color: C.blue, border: `1px solid ${C.separator}` }} title={t.printList}>
+          <button onClick={handlePrintWeek} className="ios-btn flex-shrink-0 px-4 rounded-2xl flex items-center justify-center gap-2 font-semibold bg-c-card text-c-blue border border-c-separator" title={t.printList}>
             <Printer size={18} strokeWidth={2.2} />
           </button>
         )}
@@ -170,10 +166,10 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
           const isLast = idx === DAYS.length - 1;
           return (
             <div key={day}>
-              <div className="px-4 pt-2.5 pb-0.5 flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.textTertiary }}>{day}</span>
-                <span className="text-[10px]" style={{ color: C.textTertiary }}>·</span>
-                <span className="text-[10px] font-medium" style={{ color: C.textTertiary }}>{DAYS_FULL[day]}</span>
+              <div className="px-4 pt-2.5 pb-0.5 flex items-center gap-1.5 text-c-text-tertiary">
+                <span className="text-[10px] font-bold uppercase tracking-wider">{day}</span>
+                <span className="text-[10px]">·</span>
+                <span className="text-[10px] font-medium">{DAYS_FULL[day]}</span>
               </div>
               <MealSlotRow
                 slotLabel={t.lunch}
@@ -185,7 +181,7 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
                 tRecipe={tRecipe}
                 t={t}
               />
-              <div className="h-px ml-4" style={{ background: C.separator }} />
+              <div className="h-px ml-4 bg-c-separator" />
               <MealSlotRow
                 slotLabel={t.dinner}
                 recipe={dinnerRecipe}
@@ -196,7 +192,7 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
                 tRecipe={tRecipe}
                 t={t}
               />
-              {!isLast && <div className="h-2" style={{ background: C.bg }} />}
+              {!isLast && <div className="h-2 bg-c-bg" />}
             </div>
           );
         })}
@@ -204,7 +200,7 @@ export function PlanView({ weekPlan, recipes, assignToDay, recipeStoreCost, peop
 
       {recipes.length === 0 && (
         <div className="text-center py-8 px-4">
-          <p className="text-sm" style={{ color: C.textSecondary }}>
+          <p className="text-sm text-c-text-secondary">
             No recipes yet — try Randomize to fill your week from the library.
           </p>
         </div>

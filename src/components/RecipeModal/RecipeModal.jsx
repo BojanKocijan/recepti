@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { X, Search, Sparkles } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { CATEGORY_CONFIG } from "../../constants/config";
 import { INGREDIENT_DB, tIng, tUnit } from "../../data/ingredientDb";
 import { fmt } from "../../utils/pricing";
@@ -58,19 +57,19 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
   const hasCustom = ingredients.some(i => i._custom);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end fade-in" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
-      <div className="w-full max-w-3xl mx-auto h-[92vh] flex flex-col rounded-t-3xl slide-up overflow-hidden" style={{ background: C.bg }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between" style={{ background: C.card, borderBottom: `0.5px solid ${C.separator}` }}>
-          <button onClick={onClose} className="ios-btn px-2 py-1 text-sm font-semibold" style={{ color: C.blue }}>{t.cancel}</button>
+    <div className="fixed inset-0 z-50 flex items-end fade-in overlay-dark" onClick={onClose}>
+      <div className="w-full max-w-3xl mx-auto h-[92vh] flex flex-col rounded-t-3xl slide-up overflow-hidden bg-c-bg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between bg-c-card separator-b">
+          <button onClick={onClose} className="ios-btn px-2 py-1 text-sm font-semibold text-c-blue">{t.cancel}</button>
           <h2 className="font-bold">{recipe?._scanned ? t.reviewScanned : (recipe?.id ? t.editRecipe : t.newRecipe)}</h2>
-          <button onClick={handleSave} disabled={!name || ingredients.length === 0} className="ios-btn px-2 py-1 text-sm font-bold disabled:opacity-30" style={{ color: C.blue }}>{t.saveBtn}</button>
+          <button onClick={handleSave} disabled={!name || ingredients.length === 0} className="ios-btn px-2 py-1 text-sm font-bold disabled:opacity-30 text-c-blue">{t.saveBtn}</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-8">
           {hasCustom && (
-            <div className="ios-card p-3 flex items-start gap-2 text-sm" style={{ background: C.orangeSoft }}>
-              <Sparkles size={14} style={{ color: C.orange }} className="mt-0.5 flex-shrink-0" />
-              <span style={{ color: C.text }}>{t.customNote}</span>
+            <div className="ios-card p-3 flex items-start gap-2 text-sm bg-c-orange-soft">
+              <Sparkles size={14} className="text-c-orange mt-0.5 flex-shrink-0" />
+              <span className="text-c-text">{t.customNote}</span>
             </div>
           )}
 
@@ -86,20 +85,20 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
 
           <div className="ios-card overflow-hidden">
             <SettingsRow label={t.serves}>
-              <select value={recipePeople} onChange={(e) => setRecipePeople(Number(e.target.value))} className="bg-transparent outline-none font-medium" style={{ color: C.blue }}>
+              <select value={recipePeople} onChange={(e) => setRecipePeople(Number(e.target.value))} className="bg-transparent outline-none font-medium text-c-blue">
                 {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? t.person : t.peopleW}</option>)}
               </select>
             </SettingsRow>
             <SettingsRow label={t.time} last>
               <input type="number" min="5" max="240" value={minutes} onChange={(e) => setMinutes(Number(e.target.value) || 30)}
-                className="bg-transparent outline-none font-medium w-12 text-right" style={{ color: C.blue }} />
-              <span style={{ color: C.textSecondary }} className="ml-1">{t.min}</span>
+                className="bg-transparent outline-none font-medium w-12 text-right text-c-blue" />
+              <span className="ml-1 text-c-text-secondary">{t.min}</span>
             </SettingsRow>
           </div>
 
           <div className="ios-card overflow-hidden">
             <SettingsRow label={t.category} last>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-transparent outline-none font-medium text-[15px]" style={{ color: C.blue }}>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="bg-transparent outline-none font-medium text-[15px] text-c-blue">
                 {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
                   <option key={k} value={k}>{v.emoji} {lang === "sr" ? v.labelSr : v.labelEn}</option>
                 ))}
@@ -108,11 +107,11 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
           </div>
 
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2" style={{ color: C.textSecondary }}>{t.tags}</h3>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2 text-c-text-secondary">{t.tags}</h3>
             <div className="ios-card p-3 flex flex-wrap gap-1.5">
               {ALL_TAGS.map(tag => (
-                <button key={tag} onClick={() => toggleTag(tag)} className="ios-btn px-2.5 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: tags.includes(tag) ? C.blue : C.bg, color: tags.includes(tag) ? "#fff" : C.text }}>
+                <button key={tag} onClick={() => toggleTag(tag)}
+                  className={`ios-btn px-2.5 py-1 rounded-full text-xs font-semibold ${tags.includes(tag) ? "bg-c-blue text-white" : "bg-c-bg text-c-text"}`}>
                   {tag}
                 </button>
               ))}
@@ -120,8 +119,8 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
           </div>
 
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2" style={{ color: C.textSecondary }}>
-              {t.nutritionPerPortion} <span style={{ color: C.textTertiary }}>{t.optional}</span>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2 text-c-text-secondary">
+              {t.nutritionPerPortion} <span className="text-c-text-tertiary">{t.optional}</span>
             </h3>
             <div className="ios-card p-3 grid grid-cols-4 gap-2">
               {[
@@ -134,42 +133,43 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
                   <input type="number" min="0" value={nutrition[key] || ""}
                     onChange={(e) => setNutrition({ ...nutrition, [key]: e.target.value })}
                     placeholder={placeholder}
-                    className="w-full text-center text-lg font-bold rounded-lg py-1.5 outline-none"
-                    style={{ background: C.bg, color: key === "protein" ? C.green : C.text }} />
-                  <div className="text-[10px] font-medium uppercase tracking-wider mt-0.5" style={{ color: C.textTertiary }}>{label}</div>
+                    className={`w-full text-center text-lg font-bold rounded-lg py-1.5 outline-none bg-c-bg ${key === "protein" ? "text-c-green" : "text-c-text"}`} />
+                  <div className="text-[10px] font-medium uppercase tracking-wider mt-0.5 text-c-text-tertiary">{label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2" style={{ color: C.textSecondary }}>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider px-2 mb-2 text-c-text-secondary">
               {t.ingredientsCount} ({ingredients.length})
             </h3>
             <div className="ios-card overflow-hidden">
               {ingredients.length === 0 ? (
-                <div className="px-4 py-6 text-center text-sm" style={{ color: C.textSecondary }}>
+                <div className="px-4 py-6 text-center text-sm text-c-text-secondary">
                   {t.searchAndAdd}
                 </div>
               ) : (
                 ingredients.map((it, idx) => (
-                  <div key={idx} className="px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: idx < ingredients.length - 1 ? `0.5px solid ${C.separator}` : "none" }}>
+                  <div key={idx} className={`px-3 py-2.5 flex items-center gap-2 ${idx < ingredients.length - 1 ? "separator-b" : ""}`}>
                     <input type="number" step="0.1" min="0.1" value={it.quantity} onChange={(e) => updateQty(idx, e.target.value)}
-                      className="w-14 text-center bg-transparent rounded-md py-1 text-sm font-semibold" style={{ background: C.bg, color: C.text }} />
+                      className="w-14 text-center bg-transparent rounded-md py-1 text-sm font-semibold bg-c-bg text-c-text" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm flex items-center gap-1.5">
                         {tIng(it.name, lang)}
-                        {it._custom && <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded" style={{ background: C.orange, color: "#fff" }}>{t.setPrice}</span>}
+                        {it._custom && <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-c-orange text-white">{t.setPrice}</span>}
                       </div>
-                      <div className="text-[10px]" style={{ color: C.textTertiary }}>{tUnit(it.unit, lang)}</div>
+                      <div className="text-[10px] text-c-text-tertiary">{tUnit(it.unit, lang)}</div>
                     </div>
                     {it._custom ? (
                       <input type="text" defaultValue={it.price.toFixed(2)} onBlur={(e) => updatePrice(idx, e.target.value)} placeholder="€"
-                        className="w-16 text-right rounded-md px-2 py-1 text-sm font-semibold" style={{ background: C.orangeSoft, color: C.text }} />
+                        className="w-16 text-right rounded-md px-2 py-1 text-sm font-semibold bg-c-orange-soft text-c-text" />
                     ) : (
                       <span className="text-sm font-semibold w-16 text-right">{fmt(adjustedPrice(it.price) * it.quantity)}</span>
                     )}
-                    <button onClick={() => removeIng(idx)} className="ios-btn p-1"><X size={14} style={{ color: C.textTertiary }} /></button>
+                    <button onClick={() => removeIng(idx)} className="ios-btn p-1">
+                      <X size={14} className="text-c-text-tertiary" />
+                    </button>
                   </div>
                 ))
               )}
@@ -178,18 +178,18 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
 
           <div>
             <div className="ios-card flex items-center gap-2 px-3 py-2.5">
-              <Search size={16} style={{ color: C.textTertiary }} />
+              <Search size={16} className="text-c-text-tertiary" />
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t.searchIngredient}
                 className="flex-1 bg-transparent outline-none text-[15px]" />
             </div>
             {search && (
               <div className="ios-card mt-2 max-h-56 overflow-y-auto">
                 {filtered.length === 0 ? (
-                  <div className="p-3 text-sm text-center" style={{ color: C.textSecondary }}>{t.noMatches}</div>
+                  <div className="p-3 text-sm text-center text-c-text-secondary">{t.noMatches}</div>
                 ) : filtered.slice(0, 10).map(it => (
-                  <button key={it.name} onClick={() => addIng(it)} className="ios-btn w-full px-4 py-2.5 flex items-center justify-between text-left text-sm"
-                    style={{ borderBottom: `0.5px solid ${C.separator}` }}>
-                    <span>{tIng(it.name, lang)} <span style={{ color: C.textTertiary }} className="text-xs">/ {tUnit(it.unit, lang)}</span></span>
+                  <button key={it.name} onClick={() => addIng(it)}
+                    className="ios-btn w-full px-4 py-2.5 flex items-center justify-between text-left text-sm separator-b">
+                    <span>{tIng(it.name, lang)} <span className="text-xs text-c-text-tertiary">/ {tUnit(it.unit, lang)}</span></span>
                     <span className="font-semibold">{fmt(adjustedPrice(it.price))}</span>
                   </button>
                 ))}
@@ -198,7 +198,7 @@ export function RecipeModal({ recipe, onSave, onClose, adjustedPrice, people, t,
           </div>
 
           <div className="ios-card p-4 flex items-center justify-between">
-            <span className="text-sm font-semibold" style={{ color: C.textSecondary }}>{t.totalFor} {recipePeople} {recipePeople === 1 ? t.person : t.peopleW}</span>
+            <span className="text-sm font-semibold text-c-text-secondary">{t.totalFor} {recipePeople} {recipePeople === 1 ? t.person : t.peopleW}</span>
             <span className="text-2xl font-bold">{fmt(totalCost)}</span>
           </div>
         </div>

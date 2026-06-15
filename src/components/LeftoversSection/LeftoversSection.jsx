@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { Sparkles, Loader2, ChevronRight, Shuffle, Plus, Clock } from "lucide-react";
-import { C } from "../../constants/tokens";
-import { INGREDIENT_DB } from "../../data/ingredientDb";
-import { tIng } from "../../data/ingredientDb";
-import { fmt, formatLeftover, humanizeAmount } from "../../utils/pricing";
+import { INGREDIENT_DB, tIng } from "../../data/ingredientDb";
+import { formatLeftover } from "../../utils/pricing";
 
 const BONUS_TEMPLATES = [
   {
@@ -243,37 +241,36 @@ export function LeftoversSection({ leftovers, t, lang, people, onAddBonusRecipe,
   };
 
   return (
-    <div className="ios-card p-5" style={{ background: "linear-gradient(135deg, #FFF8E7 0%, #FFE8D9 100%)", border: `1px solid ${C.orange}33` }}>
+    <div className="ios-card p-5 card-leftover">
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: C.orange + "22" }}>
-          <Sparkles size={18} style={{ color: C.orange }} strokeWidth={2.2} />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-c-orange/13">
+          <Sparkles size={18} className="text-c-orange" strokeWidth={2.2} />
         </div>
         <div className="flex-1">
           <h3 className="font-bold text-base">{t.leftovers}</h3>
-          <p className="text-xs mt-0.5" style={{ color: C.textSecondary }}>{t.leftoversHint}</p>
+          <p className="text-xs mt-0.5 text-c-text-secondary">{t.leftoversHint}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5 mb-4">
         {leftovers.slice(0, 8).map((lo, i) => (
           <div key={i} className="flex items-baseline gap-1.5 text-xs">
-            <span className="font-bold tabular-nums whitespace-nowrap" style={{ color: C.orange }}>
+            <span className="font-bold tabular-nums whitespace-nowrap text-c-orange">
               {formatLeftover(lo, lang)}
             </span>
-            <span className="truncate" style={{ color: C.text }}>{tIng(lo.name, lang)}</span>
+            <span className="truncate text-c-text">{tIng(lo.name, lang)}</span>
           </div>
         ))}
       </div>
       {leftovers.length > 8 && (
-        <p className="text-[11px] mb-3 text-center" style={{ color: C.textTertiary }}>
+        <p className="text-[11px] mb-3 text-center text-c-text-tertiary">
           +{leftovers.length - 8} {lang === "sr" ? "još" : "more"}
         </p>
       )}
 
       {!bonusRecipe ? (
         <button onClick={generateBonusRecipe} disabled={generating}
-          className="ios-btn w-full py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-white disabled:opacity-50"
-          style={{ background: C.orange }}>
+          className="ios-btn w-full py-3 rounded-2xl flex items-center justify-center gap-2 font-bold text-white bg-c-orange disabled:opacity-50">
           {generating
             ? <><Loader2 size={16} className="animate-spin" /> {t.suggesting}</>
             : <><Sparkles size={16} strokeWidth={2.4} /> {t.suggestRecipe}</>
@@ -281,42 +278,40 @@ export function LeftoversSection({ leftovers, t, lang, people, onAddBonusRecipe,
         </button>
       ) : (
         <div className="mt-2 space-y-2">
-          <button onClick={() => onView(bonusRecipe)} className="ios-btn w-full ios-card p-4 flex items-center gap-3 text-left" style={{ background: C.card }}>
+          <button onClick={() => onView(bonusRecipe)} className="ios-btn w-full ios-card p-4 flex items-center gap-3 text-left">
             <div className="text-4xl flex-shrink-0">{bonusRecipe.emoji}</div>
             <div className="flex-1 min-w-0">
               <div className="font-bold truncate">{bonusRecipe.name}</div>
-              <div className="text-xs flex items-center gap-2 flex-wrap mt-0.5" style={{ color: C.textSecondary }}>
+              <div className="text-xs flex items-center gap-2 flex-wrap mt-0.5 text-c-text-secondary">
                 <span className="flex items-center gap-1"><Clock size={11} />{bonusRecipe.minutes}m</span>
                 {bonusRecipe.nutrition && (<>
                   <span>·</span>
-                  <span className="font-bold" style={{ color: C.green }}>{bonusRecipe.nutrition.protein}g {t.protein}</span>
+                  <span className="font-bold text-c-green">{bonusRecipe.nutrition.protein}g {t.protein}</span>
                   <span>·</span>
                   <span>{bonusRecipe.nutrition.kcal} {t.kcal}</span>
                 </>)}
               </div>
-              <div className="text-[11px] mt-1 font-semibold" style={{ color: C.blue }}>
+              <div className="text-[11px] mt-1 font-semibold text-c-blue">
                 {lang === "sr" ? "Dodirni za pun recept →" : "Tap for full recipe →"}
               </div>
             </div>
-            <ChevronRight size={20} style={{ color: C.textTertiary }} />
+            <ChevronRight size={20} className="text-c-text-tertiary" />
           </button>
 
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => { setBonusRecipe(null); generateBonusRecipe(); }}
-              className="ios-btn py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5"
-              style={{ background: C.card, color: C.text, border: `1px solid ${C.separator}` }}>
+              className="ios-btn py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5 bg-c-card text-c-text border border-c-separator">
               <Shuffle size={14} /> {t.regenerate}
             </button>
             <button onClick={() => { onAddBonusRecipe(bonusRecipe); setBonusRecipe(null); }}
-              className="ios-btn py-2.5 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-1.5"
-              style={{ background: C.green }}>
+              className="ios-btn py-2.5 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-1.5 bg-c-green">
               <Plus size={14} strokeWidth={2.4} /> {t.addBonusRecipe}
             </button>
           </div>
         </div>
       )}
 
-      {error && <p className="text-xs mt-2 text-center" style={{ color: C.red }}>{error}</p>}
+      {error && <p className="text-xs mt-2 text-center text-c-red">{error}</p>}
     </div>
   );
 }
