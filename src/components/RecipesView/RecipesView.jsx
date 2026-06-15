@@ -142,7 +142,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
 
       {myFiltered.length === 0 && libFiltered.length === 0 && (
         <div className="text-center py-8 text-sm" style={{ color: C.textSecondary }}>
-          {t.noMatchesFor} "{search}"
+          {t.noMatchesFor} {`"${search}"`}
         </div>
       )}
     </div>

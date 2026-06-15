@@ -5,6 +5,15 @@ import { STORE_MULTIPLIERS } from "../../constants/config";
 import { Section } from "../shared/Section";
 import { SettingsRow } from "../shared/SettingsRow";
 
+function Pill({ active, onClick, children }) {
+  return (
+    <button onClick={onClick} className="ios-btn px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5"
+      style={{ background: active ? C.blue : C.card, color: active ? "#fff" : C.text, border: active ? "none" : `1px solid ${C.separator}` }}>
+      {active && <Check size={12} strokeWidth={3} />}{children}
+    </button>
+  );
+}
+
 export function PrefsModal({ prefs, setPrefs, store, setStore, people, setPeople, lang, setLang, onClose, t }) {
   const [showSaved, setShowSaved] = useState(false);
 
@@ -15,13 +24,6 @@ export function PrefsModal({ prefs, setPrefs, store, setStore, people, setPeople
       onClose();
     }, 800);
   };
-
-  const Pill = ({ active, onClick, children }) => (
-    <button onClick={onClick} className="ios-btn px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5"
-      style={{ background: active ? C.blue : C.card, color: active ? "#fff" : C.text, border: active ? "none" : `1px solid ${C.separator}` }}>
-      {active && <Check size={12} strokeWidth={3} />}{children}
-    </button>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end fade-in" style={{ background: "rgba(0,0,0,0.4)" }} onClick={onClose}>
