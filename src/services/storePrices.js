@@ -30,14 +30,18 @@ const readCache = (store) => {
     if (!raw) return null;
     const { multiplier, ts } = JSON.parse(raw);
     if (Date.now() - ts < CACHE_TTL) return multiplier;
-  } catch {}
+  } catch {
+    // sessionStorage unavailable (private mode or quota exceeded)
+  }
   return null;
 };
 
 const writeCache = (store, multiplier) => {
   try {
     sessionStorage.setItem(cacheKey(store), JSON.stringify({ multiplier, ts: Date.now() }));
-  } catch {}
+  } catch {
+    // sessionStorage unavailable (private mode or quota exceeded)
+  }
 };
 
 const fetchWithTimeout = (url, opts = {}) => {
@@ -136,5 +140,9 @@ export const fetchStoreMultiplier = async (storeKey, fallback) => {
 
 /** Clear the cached multiplier for a store (e.g. to force a refresh). */
 export const clearStoreCache = (storeKey) => {
-  try { sessionStorage.removeItem(cacheKey(storeKey)); } catch {}
+  try {
+    sessionStorage.removeItem(cacheKey(storeKey));
+  } catch {
+    // sessionStorage unavailable
+  }
 };

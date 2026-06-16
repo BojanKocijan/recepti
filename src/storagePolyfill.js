@@ -15,15 +15,11 @@ if (typeof window !== "undefined" && !window.storage) {
 
   window.storage = {
     async get(key, shared = false) {
-      try {
-        const raw = localStorage.getItem(PREFIX + key);
-        if (raw === null) {
-          throw new Error(`Key not found: ${key}`);
-        }
-        return { key, value: raw, shared };
-      } catch (e) {
-        throw e;
+      const raw = localStorage.getItem(PREFIX + key);
+      if (raw === null) {
+        throw new Error(`Key not found: ${key}`);
       }
+      return { key, value: raw, shared };
     },
 
     async set(key, value, shared = false) {
