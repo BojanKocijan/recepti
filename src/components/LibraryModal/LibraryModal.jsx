@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Search, X, Check, Plus } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { fmt, calcPackages } from "../../utils/pricing";
 import { HF_LIBRARY, RECIPE_SR } from "../../data/recipeDb";
 import { Chip } from "../shared/Chip";
@@ -27,18 +26,18 @@ export function LibraryModal({ onClose, recipes, onImport, adjustedPrice, people
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end fade-in" style={{ background: "rgba(0,0,0,0.4)" }} onClick={onClose}>
-      <div className="w-full max-w-3xl mx-auto h-[92vh] flex flex-col rounded-t-3xl slide-up overflow-hidden" style={{ background: C.bg }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex-shrink-0 px-4 pt-3 pb-3" style={{ background: C.card }}>
-          <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: C.separator }} />
+    <div className="fixed inset-0 z-50 flex items-end fade-in overlay-light" onClick={onClose}>
+      <div className="w-full max-w-3xl mx-auto h-[92vh] flex flex-col rounded-t-3xl slide-up overflow-hidden bg-c-bg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex-shrink-0 px-4 pt-3 pb-3 bg-c-card">
+          <div className="w-10 h-1 rounded-full mx-auto mb-3 bg-c-separator" />
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold">{t.recipeLibrary}</h2>
-            <button onClick={onClose} className="ios-btn p-2 rounded-full" style={{ background: C.bg }}>
-              <X size={18} style={{ color: C.text }} />
+            <button onClick={onClose} className="ios-btn p-2 rounded-full bg-c-bg">
+              <X size={18} className="text-c-text" />
             </button>
           </div>
-          <div className="ios-card flex items-center gap-2 px-3 py-2.5 mb-3" style={{ background: C.bg }}>
-            <Search size={16} style={{ color: C.textTertiary }} />
+          <div className="ios-card flex items-center gap-2 px-3 py-2.5 mb-3 bg-c-bg">
+            <Search size={16} className="text-c-text-tertiary" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t.search25}
               className="flex-1 bg-transparent outline-none text-[15px]" />
           </div>
@@ -58,11 +57,11 @@ export function LibraryModal({ onClose, recipes, onImport, adjustedPrice, people
                 <div className="text-3xl flex-shrink-0">{r.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[15px] truncate">{displayName}</div>
-                  <div className="text-xs flex items-center gap-1.5 flex-wrap mt-0.5" style={{ color: C.textSecondary }}>
+                  <div className="text-xs flex items-center gap-1.5 flex-wrap mt-0.5 text-c-text-secondary">
                     <span>{r.minutes}m</span>
                     <span>·</span>
-                    <span className="font-bold" style={{ color: C.green }}>{r.nutrition?.protein}g</span>
-                    <span style={{ color: C.textTertiary }}>{t.protein}</span>
+                    <span className="font-bold text-c-green">{r.nutrition?.protein}g</span>
+                    <span className="text-c-text-tertiary">{t.protein}</span>
                     <span>·</span>
                     <span>{r.nutrition?.kcal} {t.kcal}</span>
                     <span>·</span>
@@ -70,15 +69,14 @@ export function LibraryModal({ onClose, recipes, onImport, adjustedPrice, people
                   </div>
                 </div>
                 <button onClick={() => onImport(r)} disabled={imported}
-                  className="ios-btn px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 flex items-center gap-1"
-                  style={{ background: imported ? C.greenSoft : C.blue, color: imported ? C.green : "#fff" }}>
+                  className={`ios-btn px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 flex items-center gap-1 ${imported ? "bg-c-green-soft text-c-green" : "bg-c-blue text-white"}`}>
                   {imported ? <><Check size={12} /> {t.added}</> : <><Plus size={12} /> {t.add}</>}
                 </button>
               </div>
             );
           })}
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-sm" style={{ color: C.textSecondary }}>{t.noRecipesMatch}</div>
+            <div className="text-center py-12 text-sm text-c-text-secondary">{t.noRecipesMatch}</div>
           )}
         </div>
       </div>

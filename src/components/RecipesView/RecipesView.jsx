@@ -3,7 +3,6 @@ import { Search, X, Clock, Check, Plus, Sparkles } from "lucide-react";
 import { C } from "../../constants/tokens";
 import { MAIN_CATS, catLabel } from "../../constants/config";
 import { fmt, calcPackages } from "../../utils/pricing";
-import { tIng } from "../../data/ingredientDb";
 import { HF_LIBRARY, RECIPE_SR } from "../../data/recipeDb";
 import { Chip } from "../shared/Chip";
 import { ActionTile } from "../shared/ActionTile";
@@ -46,10 +45,14 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
       </div>
 
       <div className="ios-card flex items-center gap-2 px-3 py-2.5">
-        <Search size={16} style={{ color: C.textTertiary }} />
+        <Search size={16} className="text-c-text-tertiary" />
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t.searchRecipes}
           className="flex-1 bg-transparent outline-none text-[15px]" />
-        {search && <button onClick={() => setSearch("")} className="ios-btn"><X size={16} style={{ color: C.textTertiary }} /></button>}
+        {search && (
+          <button onClick={() => setSearch("")} className="ios-btn">
+            <X size={16} className="text-c-text-tertiary" />
+          </button>
+        )}
       </div>
 
       <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4">
@@ -67,7 +70,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
 
       {myFiltered.length > 0 && (
         <div>
-          <div className="text-[13px] font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: C.textSecondary }}>
+          <div className="text-[13px] font-semibold uppercase tracking-wide mb-2 px-1 text-c-text-secondary">
             {lang === "sr" ? "Moji recepti" : "My recipes"} ({myFiltered.length})
           </div>
           <div className="space-y-2">
@@ -78,12 +81,12 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
                   <div className="text-3xl flex-shrink-0">{r.emoji || "🍽️"}</div>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold truncate">{localized.name}</div>
-                    <div className="text-xs mt-0.5 flex items-center gap-2 flex-wrap" style={{ color: C.textSecondary }}>
+                    <div className="text-xs mt-0.5 flex items-center gap-2 flex-wrap text-c-text-secondary">
                       <CategoryBadge category={r.category} lang={lang} />
                       {r.minutes && <span className="flex items-center gap-1"><Clock size={11} />{r.minutes}m</span>}
                       {r.nutrition && (<>
                         <span>·</span>
-                        <span className="font-bold" style={{ color: C.green }}>{r.nutrition.protein}g {t.protein}</span>
+                        <span className="font-bold text-c-green">{r.nutrition.protein}g {t.protein}</span>
                         <span>·</span>
                         <span>{r.nutrition.kcal} {t.kcal}</span>
                       </>)}
@@ -91,7 +94,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="font-bold text-lg">{fmt(recipeStoreCost(r))}</div>
-                    <div className="text-[10px]" style={{ color: C.textTertiary }}>{t.forN} {people}</div>
+                    <div className="text-[10px] text-c-text-tertiary">{t.forN} {people}</div>
                   </div>
                 </button>
               );
@@ -102,7 +105,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
 
       {libFiltered.length > 0 && (
         <div>
-          <div className="text-[13px] font-semibold uppercase tracking-wide mb-2 px-1" style={{ color: C.textSecondary }}>
+          <div className="text-[13px] font-semibold uppercase tracking-wide mb-2 px-1 text-c-text-secondary">
             {lang === "sr" ? "Biblioteka" : "Library"} ({libFiltered.length})
           </div>
           <div className="space-y-2">
@@ -115,12 +118,12 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
                     <div className="text-3xl flex-shrink-0">{r.emoji}</div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[15px] truncate">{displayName}</div>
-                      <div className="text-xs flex items-center gap-1.5 flex-wrap mt-0.5" style={{ color: C.textSecondary }}>
+                      <div className="text-xs flex items-center gap-1.5 flex-wrap mt-0.5 text-c-text-secondary">
                         <CategoryBadge category={r.category} lang={lang} />
                         <span>{r.minutes}m</span>
                         <span>·</span>
-                        <span className="font-bold" style={{ color: C.green }}>{r.nutrition?.protein}g</span>
-                        <span style={{ color: C.textTertiary }}>{t.protein}</span>
+                        <span className="font-bold text-c-green">{r.nutrition?.protein}g</span>
+                        <span className="text-c-text-tertiary">{t.protein}</span>
                         <span>·</span>
                         <span>{r.nutrition?.kcal} {t.kcal}</span>
                         <span>·</span>
@@ -129,8 +132,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
                     </div>
                   </button>
                   <button onClick={() => onImport(r)} disabled={imported}
-                    className="ios-btn px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 flex items-center gap-1"
-                    style={{ background: imported ? C.greenSoft : C.blue, color: imported ? C.green : "#fff" }}>
+                    className={`ios-btn px-3 py-1.5 rounded-full text-xs font-bold flex-shrink-0 flex items-center gap-1 ${imported ? "bg-c-green-soft text-c-green" : "bg-c-blue text-white"}`}>
                     {imported ? <><Check size={12} /> {t.added}</> : <><Plus size={12} /> {t.add}</>}
                   </button>
                 </div>
@@ -141,7 +143,7 @@ export function RecipesView({ recipes, recipeStoreCost, onAdd, onScan, onLibrary
       )}
 
       {myFiltered.length === 0 && libFiltered.length === 0 && (
-        <div className="text-center py-8 text-sm" style={{ color: C.textSecondary }}>
+        <div className="text-center py-8 text-sm text-c-text-secondary">
           {t.noMatchesFor} {`"${search}"`}
         </div>
       )}

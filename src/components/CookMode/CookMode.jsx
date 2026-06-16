@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, X, Loader2 } from "lucide-react";
-import { C } from "../../constants/tokens";
 
-export function CookMode({ recipe, shopping, onClose, onUpdateSteps, people, fmtQty, t, lang }) {
+export function CookMode({ recipe, onClose, onUpdateSteps, fmtQty, t, lang }) {
   const [step, setStep] = useState(0);
   const [generating, setGenerating] = useState(false);
 
@@ -38,10 +37,10 @@ export function CookMode({ recipe, shopping, onClose, onUpdateSteps, people, fmt
 
   if (generating || steps.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: C.bg }}>
-        <Loader2 className="animate-spin mb-4" size={32} style={{ color: C.blue }} />
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-c-bg">
+        <Loader2 className="animate-spin mb-4 text-c-blue" size={32} />
         <p className="text-lg font-semibold">{t.preparingRecipe}</p>
-        <p className="text-sm mt-1" style={{ color: C.textSecondary }}>{t.generatingSteps}</p>
+        <p className="text-sm mt-1 text-c-text-secondary">{t.generatingSteps}</p>
       </div>
     );
   }
@@ -50,41 +49,39 @@ export function CookMode({ recipe, shopping, onClose, onUpdateSteps, people, fmt
   const isLast = step === steps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col slide-up" style={{ background: C.bg }}>
-      <header className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between" style={{ background: C.card, borderBottom: `0.5px solid ${C.separator}` }}>
-        <button onClick={onClose} className="ios-btn p-2 rounded-full" style={{ background: C.bg }}>
-          <X size={20} style={{ color: C.text }} />
+    <div className="fixed inset-0 z-50 flex flex-col slide-up bg-c-bg">
+      <header className="flex-shrink-0 px-4 pt-3 pb-2 flex items-center justify-between bg-c-card separator-b">
+        <button onClick={onClose} className="ios-btn p-2 rounded-full bg-c-bg">
+          <X size={20} className="text-c-text" />
         </button>
         <div className="text-center">
           <div className="text-sm font-bold">{recipe.name}</div>
-          <div className="text-[11px]" style={{ color: C.textSecondary }}>{t.step} {step + 1} {t.of} {steps.length}</div>
+          <div className="text-[11px] text-c-text-secondary">{t.step} {step + 1} {t.of} {steps.length}</div>
         </div>
         <div className="w-9" />
       </header>
 
-      <div className="h-1 flex-shrink-0" style={{ background: C.separator }}>
-        <div className="h-full transition-all duration-300" style={{ width: `${progress}%`, background: C.blue }} />
+      <div className="h-1 flex-shrink-0 bg-c-separator">
+        <div className="h-full bg-c-blue transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col items-center justify-center text-center">
         <div className="text-7xl mb-6">{recipe.emoji || "👨‍🍳"}</div>
-        <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.blue }}>
+        <div className="text-xs font-bold uppercase tracking-widest mb-3 text-c-blue">
           {t.step} {step + 1}
         </div>
-        <p className="text-2xl leading-relaxed font-medium" style={{ color: C.text }}>
+        <p className="text-2xl leading-relaxed font-medium text-c-text">
           {steps[step]}
         </p>
       </div>
 
-      <div className="flex-shrink-0 p-4 pb-8 flex gap-3" style={{ background: C.card, borderTop: `0.5px solid ${C.separator}` }}>
+      <div className="flex-shrink-0 p-4 pb-8 flex gap-3 bg-c-card separator-t">
         <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}
-          className="ios-btn px-5 py-3.5 rounded-2xl font-semibold disabled:opacity-30"
-          style={{ background: C.bg, color: C.text }}>
+          className="ios-btn px-5 py-3.5 rounded-2xl font-semibold disabled:opacity-30 bg-c-bg text-c-text">
           <ChevronLeft size={18} />
         </button>
         <button onClick={() => isLast ? onClose() : setStep(step + 1)}
-          className="ios-btn flex-1 py-3.5 rounded-2xl font-bold text-white"
-          style={{ background: isLast ? C.green : C.blue }}>
+          className={`ios-btn flex-1 py-3.5 rounded-2xl font-bold text-white ${isLast ? "bg-c-green" : "bg-c-blue"}`}>
           {isLast ? t.doneCooking : t.nextStep}
         </button>
       </div>

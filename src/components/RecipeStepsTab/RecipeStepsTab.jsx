@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Flame, ListChecks, Loader2, Sparkles } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { tIng } from "../../data/ingredientDb";
 import { humanizeAmount, formatLeftover, calcLeftover } from "../../utils/pricing";
 
@@ -64,7 +63,7 @@ Return ONLY the JSON.`;
     <div className="space-y-4">
       <div className="ios-card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Flame size={16} style={{ color: C.orange }} />
+          <Flame size={16} className="text-c-orange" />
           <h3 className="font-bold">{t.ingredients}</h3>
         </div>
         <div className="space-y-2">
@@ -73,13 +72,13 @@ Return ONLY the JSON.`;
             const leftover = calcLeftover(it, it.scaledQuantity);
             return (
               <div key={idx} className="flex items-baseline gap-3 text-sm">
-                <span className="font-bold tabular-nums whitespace-nowrap" style={{ color: C.blue, minWidth: 80 }}>
+                <span className="font-bold tabular-nums whitespace-nowrap text-c-blue min-w-[80px]">
                   {human.amount} {human.unit}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div style={{ color: C.text }}>{tIng(it.name, lang)}</div>
+                  <div className="text-c-text">{tIng(it.name, lang)}</div>
                   {leftover && (
-                    <div className="text-[11px] mt-0.5" style={{ color: C.textTertiary }}>
+                    <div className="text-[11px] mt-0.5 text-c-text-tertiary">
                       {lang === "sr" ? "ostaje" : "leftover"}: {formatLeftover(leftover, lang)}
                     </div>
                   )}
@@ -93,12 +92,11 @@ Return ONLY the JSON.`;
       <div className="ios-card p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <ListChecks size={16} style={{ color: C.green }} />
+            <ListChecks size={16} className="text-c-green" />
             <h3 className="font-bold">{t.instructions}</h3>
           </div>
           {recipe.steps && recipe.steps.length > 0 && (
-            <button onClick={generateSteps} disabled={generating} className="ios-btn text-xs font-semibold px-2 py-1 rounded-full disabled:opacity-50"
-              style={{ color: C.blue, background: C.blueSoft }}>
+            <button onClick={generateSteps} disabled={generating} className="ios-btn text-xs font-semibold px-2 py-1 rounded-full disabled:opacity-50 text-c-blue bg-c-blue-soft">
               {generating ? <Loader2 size={12} className="animate-spin inline" /> : t.regenerate}
             </button>
           )}
@@ -106,23 +104,22 @@ Return ONLY the JSON.`;
 
         {!recipe.steps || recipe.steps.length === 0 ? (
           <div className="text-center py-4">
-            <p className="text-sm mb-3" style={{ color: C.textSecondary }}>
+            <p className="text-sm mb-3 text-c-text-secondary">
               {t.noInstructions}
             </p>
-            <button onClick={generateSteps} disabled={generating} className="ios-btn px-4 py-2 rounded-full font-semibold text-sm text-white disabled:opacity-50 flex items-center gap-2 mx-auto"
-              style={{ background: C.blue }}>
+            <button onClick={generateSteps} disabled={generating} className="ios-btn px-4 py-2 rounded-full font-semibold text-sm text-white disabled:opacity-50 flex items-center gap-2 mx-auto bg-c-blue">
               {generating ? <><Loader2 size={14} className="animate-spin" /> {t.generating}</> : <><Sparkles size={14} /> {t.generateAI}</>}
             </button>
-            {error && <p className="text-xs mt-2" style={{ color: C.red }}>{error}</p>}
+            {error && <p className="text-xs mt-2 text-c-red">{error}</p>}
           </div>
         ) : (
           <div className="space-y-3">
             {recipe.steps.map((step, idx) => (
               <div key={idx} className="flex gap-3">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: C.blue }}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-c-blue">
                   <span className="text-xs font-bold text-white">{idx + 1}</span>
                 </div>
-                <div className="flex-1 text-sm leading-relaxed" style={{ color: C.text }}>{step}</div>
+                <div className="flex-1 text-sm leading-relaxed text-c-text">{step}</div>
               </div>
             ))}
           </div>

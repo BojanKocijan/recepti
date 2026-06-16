@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ChevronLeft, Printer, Clock, Users, Flame, ChefHat } from "lucide-react";
-import { C } from "../../constants/tokens";
 import { getHFPricePerPortion } from "../../constants/config";
 import { fmt, printHTML, calcPackages } from "../../utils/pricing";
 import { tIng, tUnit } from "../../data/ingredientDb";
@@ -93,13 +92,13 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
     printHTML(html);
   };
 
-  if (cooking) return <CookMode recipe={recipe} shopping={shopping} onClose={() => setCooking(false)} onUpdateSteps={onUpdateSteps} people={people} fmtQty={fmtQty} t={t} lang={lang} />;
+  if (cooking) return <CookMode recipe={recipe} onClose={() => setCooking(false)} onUpdateSteps={onUpdateSteps} fmtQty={fmtQty} t={t} lang={lang} />;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col fade-in" style={{ background: C.bg }}>
-      <header className="flex-shrink-0 sticky top-0 z-20" style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: `0.5px solid ${C.separator}` }}>
+    <div className="fixed inset-0 z-50 flex flex-col fade-in bg-c-bg">
+      <header className="flex-shrink-0 sticky top-0 z-20 glass-white separator-b">
         <div className="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
-          <button onClick={onClose} className="ios-btn px-2 py-1.5 rounded-full text-sm font-semibold flex items-center gap-0.5" style={{ color: C.blue }}>
+          <button onClick={onClose} className="ios-btn px-2 py-1.5 rounded-full text-sm font-semibold flex items-center gap-0.5 text-c-blue">
             <ChevronLeft size={18} /> {t.back}
           </button>
           <div className="flex-1 min-w-0 text-center">
@@ -109,10 +108,10 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={handlePrintRecipe} className="ios-btn p-2 rounded-full" style={{ color: C.blue, background: C.blueSoft }} title={t.printRecipe}>
+            <button onClick={handlePrintRecipe} className="ios-btn p-2 rounded-full text-c-blue bg-c-blue-soft" title={t.printRecipe}>
               <Printer size={16} strokeWidth={2.2} />
             </button>
-            <button onClick={() => onEdit(recipe)} className="ios-btn px-2 py-1.5 rounded-full text-sm font-semibold" style={{ color: C.blue }}>
+            <button onClick={() => onEdit(recipe)} className="ios-btn px-2 py-1.5 rounded-full text-sm font-semibold text-c-blue">
               {t.edit}
             </button>
           </div>
@@ -124,7 +123,7 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
           <div className="ios-card p-6 text-center">
             <div className="text-7xl mb-3">{recipe.emoji || "🍽️"}</div>
             <h1 className="text-3xl font-bold tracking-tight">{recipe.name}</h1>
-            <div className="flex items-center justify-center gap-4 mt-3 text-sm" style={{ color: C.textSecondary }}>
+            <div className="flex items-center justify-center gap-4 mt-3 text-sm text-c-text-secondary">
               {recipe.minutes && <span className="flex items-center gap-1"><Clock size={14} />{recipe.minutes} {t.min}</span>}
               <span className="flex items-center gap-1"><Users size={14} />{people}</span>
               <span className="flex items-center gap-1"><Flame size={14} />{recipe.ingredients.length} {t.items}</span>
@@ -132,7 +131,7 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
             {recipe.tags && recipe.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 justify-center mt-3">
                 {recipe.tags.map(tag => (
-                  <span key={tag} className="text-[11px] font-medium px-2 py-0.5 rounded-full" style={{ background: C.bg, color: C.textSecondary }}>{tag}</span>
+                  <span key={tag} className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-c-bg text-c-text-secondary">{tag}</span>
                 ))}
               </div>
             )}
@@ -140,44 +139,43 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
 
           {recipe.nutrition && (
             <div className="ios-card p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: C.textSecondary }}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-3 text-c-text-secondary">
                 {t.perPortionLabel}
               </div>
               <div className="grid grid-cols-4 gap-2">
-                <NutritionStat value={recipe.nutrition.kcal} label={t.kcal} color={C.text} />
-                <NutritionStat value={recipe.nutrition.protein + "g"} label={t.protein} color={C.green} highlight />
-                <NutritionStat value={recipe.nutrition.carbs + "g"} label={t.carbs} color={C.text} />
-                <NutritionStat value={recipe.nutrition.fat + "g"} label={t.fat} color={C.text} />
+                <NutritionStat value={recipe.nutrition.kcal} label={t.kcal} />
+                <NutritionStat value={recipe.nutrition.protein + "g"} label={t.protein} highlight />
+                <NutritionStat value={recipe.nutrition.carbs + "g"} label={t.carbs} />
+                <NutritionStat value={recipe.nutrition.fat + "g"} label={t.fat} />
               </div>
             </div>
           )}
 
-          <div className="ios-card p-4 flex items-center justify-between"
-            style={{ background: isCheaper ? C.greenSoft : C.orangeSoft }}>
+          <div className={`ios-card p-4 flex items-center justify-between ${isCheaper ? "bg-c-green-soft" : "bg-c-orange-soft"}`}>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: isCheaper ? C.green : C.orange }}>
+              <div className={`text-[10px] font-semibold uppercase tracking-wider ${isCheaper ? "text-c-green" : "text-c-orange"}`}>
                 {isCheaper ? t.cheaperToCook : t.helloFreshCheaper}
               </div>
-              <div className="text-2xl font-bold mt-0.5" style={{ color: isCheaper ? C.green : C.orange }}>
+              <div className={`text-2xl font-bold mt-0.5 ${isCheaper ? "text-c-green" : "text-c-orange"}`}>
                 {isCheaper ? t.save : t.costs}{fmt(Math.abs(diff))}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: C.textSecondary }}>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-c-text-secondary">
                 {t.yourCost}
               </div>
               <div className="text-2xl font-bold">{fmt(totalCost)}</div>
-              <div className="text-[10px]" style={{ color: C.textSecondary }}>{t.vsHF} {fmt(hfMealCost)}</div>
+              <div className="text-[10px] text-c-text-secondary">{t.vsHF} {fmt(hfMealCost)}</div>
             </div>
           </div>
 
-          <div className="ios-card p-1 flex gap-1 sticky top-[52px] z-10" style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)" }}>
-            <button onClick={() => setTab("recipe")} className="flex-1 py-2 rounded-xl text-sm font-semibold transition"
-              style={{ background: tab === "recipe" ? C.blue : "transparent", color: tab === "recipe" ? "#fff" : C.text }}>
+          <div className="ios-card p-1 flex gap-1 sticky top-[52px] z-10 glass-white-95">
+            <button onClick={() => setTab("recipe")}
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab === "recipe" ? "bg-c-blue text-white" : "text-c-text"}`}>
               {t.recipe}
             </button>
-            <button onClick={() => setTab("shop")} className="flex-1 py-2 rounded-xl text-sm font-semibold transition"
-              style={{ background: tab === "shop" ? C.blue : "transparent", color: tab === "shop" ? "#fff" : C.text }}>
+            <button onClick={() => setTab("shop")}
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${tab === "shop" ? "bg-c-blue text-white" : "text-c-text"}`}>
               {t.shoppingTab}
             </button>
           </div>
@@ -187,10 +185,9 @@ export function RecipeDetailModal({ recipe, onClose, onEdit, onUpdateSteps, adju
         </div>
       </div>
 
-      <div className="flex-shrink-0 px-4 pt-3 pb-6" style={{ background: "rgba(242,242,247,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderTop: `0.5px solid ${C.separator}` }}>
+      <div className="flex-shrink-0 px-4 pt-3 pb-6 glass-white-92 separator-t">
         <div className="max-w-3xl mx-auto">
-          <button onClick={() => setCooking(true)} className="ios-btn w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold text-white text-base"
-            style={{ background: C.blue, boxShadow: "0 4px 14px rgba(0,122,255,0.3)" }}>
+          <button onClick={() => setCooking(true)} className="ios-btn w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold text-white text-base bg-c-blue shadow-blue">
             <ChefHat size={20} strokeWidth={2.4} />
             {t.startCooking}
           </button>
